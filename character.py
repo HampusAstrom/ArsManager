@@ -1,7 +1,9 @@
 import numpy as np
 import copy
 
-def dict2string(dct) -> str:
+def dict2string(dct, sort=True) -> str:
+    if sort:
+        dct = dict(sorted(dct.items()))
     s = ""
     for key, val in dct.items():
         s += f"{key}: {val} "
@@ -23,6 +25,12 @@ class Ability:
 
     def __str__(self) -> str:
         return str(self._value)
+
+    def __int__(self) -> int:
+        return int(self._value)
+
+    def __float__(self) -> int:
+        return float(self._value)
 
     @staticmethod
     def xp2val(xp: int) -> tuple[int, int]:
@@ -101,7 +109,8 @@ class Character:
                  prios: dict,
                  characteristics: dict,
                  rng: np.random.Generator,
-                 budget: int = 15,
+                 rel_prio_weight: float = 1,
+                 budget: int = 20,
                  chunk_mean: int = 5,
                  current_year: int = None,
                  char_info = None, # free field for notes or so
@@ -116,6 +125,7 @@ class Character:
         self.char_input_age = char_input_age
         self.characteristics = characteristics
         self.rng = rng
+        self.rel_prio_weight = rel_prio_weight
         self.prios = prios
         self.budget = budget
         self.chunk_mean = chunk_mean
@@ -157,7 +167,10 @@ class Character:
         temp = sorted(stats.items())
         keys, sts = zip(*temp)
         pri = [value for key,value in sorted(self.prios.items())]
-        weight = self.calc_weights(np.array(sts), np.array(pri))
+        sts = [int(value.tot_xp) for value in sts]
+        weight = self.calc_weights(np.array(sts),
+                                   np.array(pri),
+                                   self.rel_prio_weight)
         # start adding xp
         while budget > 0:
             # xp to add
@@ -173,11 +186,12 @@ class Character:
         return stats
 
     @staticmethod
-    def calc_weights(sts, pri):
+    def calc_weights(sts, pri, rel_prio_weight = 1):
         sts = sts / np.linalg.norm(sts)
         pri = pri / np.linalg.norm(pri)
         # TODO possilly apply function to pri before adding
-        w = np.add(sts, pri)
+        w = np.add(sts, pri*rel_prio_weight)
+        return w
 
     def get_last_year(self) -> tuple[int, dict]:
         year = max(self.history.keys())
@@ -216,13 +230,13 @@ class Character:
         if self.char_info is not None:
             s += self.char_info
             s += "\n"
-        s += f"Characteristics: {dict2string(dict(sorted(self.characteristics.items())))}\n" # TODO improve
+        s += f"Characteristics: {dict2string(self.characteristics, sort=False)}\n"
         abilites, arts = self.get_arts_and_abilities()
         tech, form = self.separate_tech_and_form(arts)
         # TODO clean up this nested mess
-        s += f"Abilities: {dict2string(dict(sorted(abilites.items())))}\n"
-        s += f"Techniques: {dict2string(dict(sorted(tech.items())))}\n"
-        s += f"Forms: {dict2string(dict(sorted(form.items())))}\n"
+        s += f"Abilities: {dict2string(abilites)}\n"
+        s += f"Techniques: {dict2string(tech)}\n"
+        s += f"Forms: {dict2string(form)}\n"
         return s
 
     # TODO consider if I need some @x.setter or @x.getter functions to 
