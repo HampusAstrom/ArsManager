@@ -1,6 +1,12 @@
 import numpy as np
 import copy
 
+def dict2string(dct) -> str:
+    s = ""
+    for key, val in dct.items():
+        s += f"{key}: {val} "
+    return s
+
 # only tracks values of the ability, assume that the name will be tracked when 
 # it is stored in a stats dict
 class Ability:
@@ -10,10 +16,13 @@ class Ability:
                  tot_xp: bool = False, # used when inputing only xp
                  ) -> None:
         if tot_xp:
-            self.tot_xp = 0
+            self._tot_xp = 0
             self.addxp(xp)
         else:
             self.set_val(value, xp)
+
+    def __str__(self) -> str:
+        return str(self._value)
 
     @staticmethod
     def xp2val(xp: int) -> tuple[int, int]:
@@ -26,30 +35,36 @@ class Ability:
 
     def add_xp(self, xp: int) -> None:
         assert xp >= 0
-        self.tot_xp = self.tot_xp + xp
-        val, rest = self.xp2val(self.tot_xp)
-        self.value = val
+        self._tot_xp = self._tot_xp + xp
+        val, rest = self.xp2val(self._tot_xp)
+        self._value = val
 
     def set_val(self, value: int, xp: int = 0) -> None:
         assert value >= 0
         assert xp >= 0
         assert value*5 >= xp # otherwise value should be higher
-        self.value = value
-        print(f"set {self.val2xp(value)} + {xp}")
-        self.tot_xp = self.val2xp(value) + xp
+        self._value = value
+        self._tot_xp = self.val2xp(value) + xp
     
-    def set_xp(self, xp: int) -> None:
-        self.tot_xp = 0
+    @property
+    def tot_xp(self) -> int:
+        return self._tot_xp
+
+    @tot_xp.setter
+    def tot_xp(self, xp: int) -> None:
+        self._tot_xp = 0
         self.addxp(xp)
 
-    def get_value(self) -> int:
-        return self.value
+    @property
+    def value(self) -> int:
+        return self._value
     
-    def get_tot_xp(self) -> int:
-        return self.tot_xp
+    @value.setter
+    def value(self, val) -> None:
+        self.set_val(val)
     
     def get_rest_xp(self) -> int:
-        return self.tot_xp - self.val2xp(self.value)
+        return self.tot_xp - self.val2xp(self._value)
 
 # only tracks values of the ability, assume that the name will be tracked when 
 # it is stored in a stats dict
@@ -83,7 +98,7 @@ class Character:
                  char_input_year: int,
                  char_input_age: int,
                  stats: dict,
-                 prio: dict,
+                 prios: dict,
                  characteristics: dict,
                  rng: np.random.Generator,
                  budget: int = 15,
@@ -94,14 +109,14 @@ class Character:
         assert char_input_age >= 0
         assert budget > 0
         assert chunk_mean > 0
-        assert self.check_same_keys(stats, prio)
+        assert self.check_same_keys(stats, prios)
         self.name = name
         self.char_info = char_info
         self.char_input_year = char_input_year
         self.char_input_age = char_input_age
         self.characteristics = characteristics
         self.rng = rng
-        self.prio = prio
+        self.prios = prios
         self.budget = budget
         self.chunk_mean = chunk_mean
         self.stats = stats
@@ -111,12 +126,12 @@ class Character:
         self.set_to_year(current_year)
 
     @staticmethod
-    def check_same_keys(prio, stats):
-        return prio.keys() == stats.keys()
+    def check_same_keys(dict1, dict2):
+        return dict1.keys() == dict2.keys()
 
     def set_to_year(self, year: int):
         assert year >= self.char_input_year
-        self.current_year = year
+        self._current_year = year
 
         if year in self.history:
             self.stats = copy.deepcopy(self.history[year])
@@ -130,7 +145,7 @@ class Character:
             assert cyear == year
             self.stats = copy.deepcopy(cstats)
 
-        self.current_year = year
+        self._current_year = year
         self._update_age()
 
     def _step_stats(self, prev_stats: dict) -> dict:
@@ -141,17 +156,18 @@ class Character:
         # build weight measure
         temp = sorted(stats.items())
         keys, sts = zip(*temp)
-        pri = [value for key,value in sorted(self.prio.items())]
+        pri = [value for key,value in sorted(self.prios.items())]
         weight = self.calc_weights(np.array(sts), np.array(pri))
         # start adding xp
         while budget > 0:
             # xp to add
             chunk = min(budget,
-                        rng.integers(self.chunk_mean-off, self.chunk_mean+off+1))
+                        rng.integers(self.chunk_mean-off,
+                                     self.chunk_mean+off+1))
             # select stat to add to
             # if we don't use replacement we might get stuck in infinite loop
             # lets run with replacement for now
-            key = rng.choice(keys, p=weight)
+            key = rng.choice(keys, p=weight/sum(weight))
             stats[key].add_xp(chunk)
             budget -= chunk
         return stats
@@ -167,10 +183,50 @@ class Character:
         year = max(self.history.keys())
         return year, copy.deepcopy(self.history[max(self.history.keys())])
 
-    def _update_age(self):
-        self.current_age = self.current_year \
+    def _update_age(self) -> None:
+        self.current_age = self._current_year \
                            - self.char_input_year \
                            + self.char_input_age
+
+    def get_arts_and_abilities(self) -> tuple[dict, dict]:
+        abilities = {}
+        arts = {}
+        # assumes no other type of Abilities to separate
+        for key, val in self.stats.items():
+            if isinstance(val, Art):
+                arts[key] = val
+            else:
+                abilities[key] = val
+        return abilities, arts
+    
+    @staticmethod
+    def separate_tech_and_form(arts) -> tuple[dict, dict]:
+        t = ["Cr","In","Mu","Pe","Re",]
+        tech = {}
+        form = {}
+        for key, val in arts.items():
+            if key in t:
+                tech[key] = val
+            else:
+                form[key] = val
+        return tech, form
+
+    def __str__(self) -> str:
+        s = f"Name: {self.name} Age: {self.current_age}\n"
+        if self.char_info is not None:
+            s += self.char_info
+            s += "\n"
+        s += f"Characteristics: {dict2string(dict(sorted(self.characteristics.items())))}\n" # TODO improve
+        abilites, arts = self.get_arts_and_abilities()
+        tech, form = self.separate_tech_and_form(arts)
+        # TODO clean up this nested mess
+        s += f"Abilities: {dict2string(dict(sorted(abilites.items())))}\n"
+        s += f"Techniques: {dict2string(dict(sorted(tech.items())))}\n"
+        s += f"Forms: {dict2string(dict(sorted(form.items())))}\n"
+        return s
+
+    # TODO consider if I need some @x.setter or @x.getter functions to 
+    # return copies of variables
 
 # some local temporary tests
 if __name__ == '__main__':
@@ -178,18 +234,18 @@ if __name__ == '__main__':
     # Ability and Art
     # mt = Ability(3, xp=23)
     mt = Ability(3, xp=5)
-    print(f"val {mt.get_value()}, tot {mt.get_tot_xp()}")
+    print(f"val {mt.value}, tot {mt.tot_xp}")
     mt.add_xp(23)
-    print(mt.get_value())
+    print(mt.value)
     print(mt.get_rest_xp())
-    print(mt.get_tot_xp())
+    print(mt.tot_xp)
     print()
     cr = Art(8, xp=5)
-    print(f"val {cr.get_value()}, tot {cr.get_tot_xp()}")
+    print(f"val {cr.value}, tot {cr.tot_xp}")
     cr.add_xp(23)
-    print(cr.get_value())
+    print(cr.value)
     print(cr.get_rest_xp())
-    print(cr.get_tot_xp())
+    print(cr.tot_xp)
     print()
     print(Ability.val2xp(5))
     print(Ability.xp2val(70))
