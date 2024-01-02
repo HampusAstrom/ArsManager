@@ -94,8 +94,11 @@ class Art(Ability):
         return (1+val)*val/2
 
     def set_val(self, value: int, xp: int = 0) -> None:
+        assert value >= 0
+        assert xp >= 0
         assert value >= xp # otherwise value should be higher
-        super().set_val(value, xp)
+        self._value = value
+        self._tot_xp = self.val2xp(value) + xp
 
 class Character:
     # TODO add function support for varying budget based on age
@@ -110,7 +113,7 @@ class Character:
                  characteristics: dict,
                  rng: np.random.Generator,
                  rel_prio_weight: float = 1,
-                 budget: int = 20,
+                 budget: int = 25,
                  chunk_mean: int = 5,
                  current_year: int = None,
                  char_info = None, # free field for notes or so
@@ -157,6 +160,10 @@ class Character:
 
         self._current_year = year
         self._update_age()
+
+    def add_years(self, years):
+        assert years > 0
+        self.set_to_year(self._current_year + years)
 
     def _step_stats(self, prev_stats: dict) -> dict:
         stats = copy.deepcopy(prev_stats)
