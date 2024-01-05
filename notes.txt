@@ -30,8 +30,71 @@ Deficient Technique/Form?
 Poor Student
 Weak Parens
 
+# OBS Puissant might not be in abilitites sometimes (mt for boni tex)
+# Bjorn
+bj_abilities = [1, 2, 2, 2, 1, 1, 1, 2, 2, 4, 5, 1, 3, 1, 1, 1, 1, 3,]
+bj_tech = [0, 1, 10, 3, 1]
+bj_form = [8, 0, 0, 8, 0, 0, 0, 0, 0, 0]
+
+# Boni
+bo_abilities = [1, 2, 2, 3, 2, 4, 1, 4, 5, 2, 1, 1, 3,]
+bo_tech = [12, 0, 0, 0, 3,]
+bo_form = [0, 0, 12, 4, 0, 0, 0, 0, 0, 0]
+
+# Cria
+cr_abilities = [1, 5, 3, 3+2, 1, 4, 2, 3, 5, 1, 1]
+cr_abilities_wo = [1, 5, 3, 3, 1, 4, 2, 3, 5, 1, 1]
+cr_tech = [4, 6, 4, 4, 4]
+cr_from = [0, 0, 0, 0, 0, 0, 2, 1, 0, 10]
+
+# Ex Misc
+ex_abilities = [3, 1, 3, 3, 2, 4, 3, 5, 1, 2, 3]
+ex_tech = [8, 0, 4, 3, 5,]
+ex_form = [0, 0, 0, 1, 0, 0, 0, 0, 12+3, 0]
+ex_form_wo = [0, 0, 0, 1, 0, 0, 0, 0, 12, 0]
+
+# Flam
+fl_abilities = [2, 1, 2, 3, 2, 1, 3, 1, 4, 5, 3, 1, 2, 1, 1]
+fl_tech = [12, 0, 0, 4, 5]
+fl_form = [0, 0, 0, 0, 0, 12+3, 0, 0, 1, 0]
+
+# Guer
+gu_abilities = [1, 3, 1, 2, 3, 1, 4, 2, 4, 3, 5, 1, 1]
+gu_tech = [0, 12+3, 0, 2, 0,]
+gu_form = [0, 0, 0, 5, 0, 0, 6, 6, 0, 0]
+
+# Jerb
+je_abilities = [1, 2, 3, 1, 2, 2, 2, 5, 3, 4+2, 5, 2, 1]
+je_tech = [6, 1, 6, 1, 6,]
+je_form = [0, 0, 0, 5, 0, 0, 10, 0, 0, 0]
+
+# Merc
+mc_abilities = [3, 1, 1, 1, 2, 4, 3, 5, 1, 2, 3, 4,]
+mc_tech = [6+3, 4, 4, 3, 5,]
+mc_form = [0, 0, 12+3, 2, 0, 0, 0, 2, 0, 0]
+
+# Meri
+mi_abilities = [1, 2, 3, 2, 5, 4, 3, 5, 2, 1,]
+mi_tech = [5, 1, 5, 2, 5]
+mi_form = [0, 0, 0, 1, 0, 0, 10+3, 5, 0, 0]
+
+# Trem
+tr_abilities = [1, 2, 1, 2, 2, 3, 2, 2, 4, 3, 3, 5, 2, 1, 3]
+tr_tech = [5, 5, 5, 5, 5,]
+tr_form = [0, 3, 6, 0, 0, 6, 0, 1, 6, 0]
+
+# Tyta
+ty_abilities = [1, 2, 2, 3, 2, 2, 2, 4, 2, 3, 5, 1]
+ty_tech = [5, 5, 0, 0, 5,]
+ty_form = [0, 0, 0, 0, 0, 0, 0, 9, 0, 0,]
+
+# Verd
+ve_abilities = [1, 3, 2, 5+2, 4+2, 2, 4, 3, 5, 1, 1,]
+ve_tech = [7, 3, 5, 3, 5,]
+ve_form = [0, 0, 0, 0, 0, 0, 0, 0, 12+3, 0]
+
 Characteristics                                 only lists positive for now
-Int Per Pre Com Str Sta Dex Qik         IC/GC   XP/gain x50  - Obs different order
+Int Per Pre Com Str Sta Dex Qik         IC/GC   fixed/scale x50xp - Obs different order
 3   0   0   -1  0   1   0   1   Bjorn   0       0/0
 5   0   0   1   0   0   0   0   Boni    2       0/7    This is late focused, should mostly have higher budget
 3   0   2   -3  0   2   0   1   Cria    0       0/2

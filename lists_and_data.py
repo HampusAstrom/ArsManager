@@ -1,4 +1,4 @@
-genabilities = ["Animal Handling",
+GENABILITIES = ["Animal Handling",
                 "Area Lore 1",
                 "Area Lore 2",
                 "Area Lore 3",
@@ -33,7 +33,7 @@ genabilities = ["Animal Handling",
                 "Survival",
                 "Swim",
                 "Teaching",]
-acaabitilites = ["Artes Liberales",
+ACAABILITIES = ["Artes Liberales",
                 "Civil and Canon Law",
                 "Islamic Law",
                 "Common Law",
@@ -44,7 +44,7 @@ acaabitilites = ["Artes Liberales",
                 "Medicine",
                 "Philosophiae",
                 "Theology",]
-arcabilities = ["Code of Hermes",
+ARCABILITIES = ["Code of Hermes",
                 "Dominion Lore",
                 "Faerie Lore",
                 "Finesse",
@@ -53,11 +53,11 @@ arcabilities = ["Code of Hermes",
                 "Magic Theory",
                 "Parma Magica",
                 "Penetration",]
-marabilities = ["Bows",
+MARABILITIES = ["Bows",
                 "Great Weapon",
                 "Single Weapon",
                 "Thrown Weapon",]
-supabilities = ["Animal Ken",
+SUPABILITIES = ["Animal Ken",
                 "Dowsing",
                 "Enchanting Music",
                 "Entrancement",
@@ -68,22 +68,7 @@ supabilities = ["Animal Ken",
                 "Shapeshifter",
                 "Wilderness Sense",]
 
-skill_areas = ["Magic",
-               "Adventure",
-               "Social",
-               "Martial",
-               "Discretion",
-               "Academic",
-               "Travel",
-               "Crafts",
-               "Performance",
-               "Religion",
-               "Governance",
-               "Lores",
-               "Medicine",
-               "Supernatural",]
-
-magic = {"Magic Theory": 20,
+MAGIC = {"Magic Theory": 20,
          "Latin": 4,
          "Parma Magica": 3,
          "Classic Greek": 0.5,
@@ -104,7 +89,7 @@ magic = {"Magic Theory": 20,
          "Awareness": 0.3,
          }
 
-adventure = {"Awareness": 5,
+ADVENTURE = {"Awareness": 5,
              "Area Lore 1": 2,
              "Athletics": 0.5,
              "Ride": 1,
@@ -123,7 +108,7 @@ adventure = {"Awareness": 5,
              "Medicine": 0.05,
              }
 
-social = {"Bargain": 1,
+SOCIAL = {"Bargain": 1,
           "Carouse": 1,
           "Charm": 1,
           "Etiquette": 1,
@@ -132,13 +117,13 @@ social = {"Bargain": 1,
           "Intrigue": 1,
           "Leadership": 0.8,
           "Native Language": 0.3,
-          "Forein Language 1": 0.3,
+          "Foreign Language 1": 0.3,
           "Order of Hermes Lore": 0.2, # assumes covenant member, cut if not
           "(Organization) Lore 1": 0.2,
           "Artes Liberales": 1,
           }
 
-martial = {"Bows": 5,
+MARTIAL = {"Bows": 5,
            "Great Weapon": 5, 
            "Single Weapon": 5, 
            "Thrown Weapon": 2,
@@ -153,7 +138,7 @@ martial = {"Bows": 5,
            "Survival": 0.2,
            }
 
-discression = {"Stealth": 10,
+DISCRETION = {"Stealth": 10,
                "Legerdemain": 3,
                "Awareness": 5,
                "Athletics": 1,
@@ -163,12 +148,12 @@ discression = {"Stealth": 10,
                "Foreign Language 1": 0.2,
                }
 
-academic = {"Artes Liberales": 5,
+ACADEMIC = {"Artes Liberales": 5,
             "Latin": 3,
             "Classic Greek": 1,
             "Teaching": 2,
             "Philosophiae": 3,
-            "Theology": 1,
+            "Theology": 0.5,
             "Civil and Canon Law": 0.3,
             "Native Language": 0.2,
             "Foreign Language 1": 0.1,
@@ -178,7 +163,7 @@ academic = {"Artes Liberales": 5,
             "(Dead Language)": 0.1,
             }
 
-travel = {"Ride": 3,
+TRAVEL = {"Ride": 3,
           "Animal Handling": 1,
           "Area Lore 1": 2,
           "Area Lore 2": 2,
@@ -199,7 +184,7 @@ travel = {"Ride": 3,
           "Arabic": 0.5,
           }
 
-crafts = {"Craft 1": 5,
+CRAFTS = {"Craft 1": 5,
           "Craft 2": 3,
           "Craft 3": 0.5,
           "Bargain": 2,
@@ -209,14 +194,14 @@ crafts = {"Craft 1": 5,
           "Finesse": 0.5, # assumes mage, cut if not
           }
 
-performance = {"Music": 5, # might just be music or atheletics, remove one if needed
+PERFORMANCE = {"Music": 5, # might just be music or atheletics, remove one if needed
                "Athletics": 2,
                "Carouse": 0.5,
                "Concentation": 0.3,
                "Folk Ken": 0.5,
                }
 
-religion = {"Theology": 5,
+RELIGION = {"Theology": 5,
             "Civil and Canon Law": 5, # remove Canon or Islamic depening on religion
             "Church Lore": 2,
             "Latin": 1, # remove Latin or Arabic depening on religion
@@ -228,7 +213,7 @@ religion = {"Theology": 5,
             "Music": 0.1,
             }
 
-governance = {"Artes Liberales": 3,
+GOVERNANCE = {"Artes Liberales": 3,
               "Civil and Canon Law": 5,
               "Philosophiae": 1,
               "Latin": 0.5, # remove Latin, Greek or Arabic depening on region
@@ -241,7 +226,7 @@ governance = {"Artes Liberales": 3,
               }
 
 # most here assumes covenant member, cut if not
-lores = {"Magic Lore": 2, 
+LORES = {"Magic Lore": 2, 
          "Dominion Lore": 1,
          "Faerie Lore": 1,
          "Infernal Lore": 0.2,
@@ -253,13 +238,13 @@ lores = {"Magic Lore": 2,
          "(Dead Language)": 0.5,
          }
 
-medicine = {"Medicine": 10,
+MEDICINE = {"Medicine": 10,
             "Chirurgy": 5,
             "Artes Liberales": 1,
             "Philosophiae": 2,
             }
 
-supernatural = {"Animal Ken": 1,
+SUPERNATURAL = {"Animal Ken": 1,
                 "Dowsing": 1,
                 "Enchanting Music": 1,
                 "Entrancement": 1,
@@ -271,18 +256,72 @@ supernatural = {"Animal Ken": 1,
                 "Wilderness Sense": 1,
                 }
 
+# skill areas with respective dictionaries and default prio
+SKILL_AREAS = {"Magic": (MAGIC, 12),
+               "Adventure": (ADVENTURE, 2),
+               "Social": (SOCIAL, 1),
+               "Martial": (MARTIAL, 0.1),
+               "Discretion": (DISCRETION, 0.2),
+               "Academic": (ACADEMIC, 0.5),
+               "Travel": (TRAVEL, 0.2),
+               "Crafts": (CRAFTS, 0.2),
+               "Performance": (PERFORMANCE, 0.2),
+               "Religion": (RELIGION, 0.1),
+               "Governance": (GOVERNANCE, 0.07),
+               "Lores": (LORES, 0.3),
+               "Medicine": (MEDICINE, 0.1),
+               "Supernatural": (SUPERNATURAL, 0.05),
+               # supernatural is special, if positive select only one skill
+               }
+
 # replacement lists start with what stat to replace, then what it's replaced by
 # and what factor to multipy its value with
-greek_shift = {"Latin": [["Classic Greek", 1],],
+GREEK_SHIFT = {"Latin": [["Classic Greek", 1],],
                "Classic Greek": [["Latin", 1],],
                "Church Lore": [["Orthodox Church Lore", 1],],
                }
 
-arabic_shift = {"Latin": [["Arabic", 1],],
+ARABIC_SHIFT = {"Latin": [["Arabic", 1],],
                "Civil and Canon Law": [["Islamic Law", 1],],
                "Church Lore": [["Sunni Lore", 1],], # reprecents org lore, change if shia
                }
 
-english_shift = {"Civil and Canon Law": [["Common Law", 1],
+ENGLISH_SHIFT = {"Civil and Canon Law": [["Common Law", 1],
                                          ["Civil and Canon Law", 0.3]],
                 }
+
+ABILITY_ARRAYS = {"default": [5, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1,],
+                  "even": [5, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1,],
+                  "uneven": [6, 5, 4, 3, 3, 2, 2, 1, 1, 1,],
+                  "extreme": [7, 5, 4, 3, 2, 2, 1, 1,],
+                  }
+
+ABILITY_ARRAYS_PRIO = {"default": 2,
+                  "even": 1,
+                  "uneven": 1,
+                  "extreme": 0.5,
+                  }
+
+TECH_ARRAYS = {"default": [9, 6, 3, 2, 0],
+                  "even": [8, 5, 5, 3, 2],
+                  "uneven": [10, 5, 3, 0, 0],
+                  "extreme": [11, 3, 2, 0, 0],
+                  }
+
+TECH_ARRAYS_PRIO = {"default": 1,
+                  "even": 0.5,
+                  "uneven": 2,
+                  "extreme": 0.5,
+                  }
+
+FORM_ARRAYS = {"default": [10, 8, 1, 0, 0, 0, 0, 0, 0, 0,],
+                  "even": [8, 6, 5, 4, 3, 2, 1, 0, 0, 0,],
+                  "uneven": [12, 4, 2, 1, 0, 0, 0, 0, 0, 0,],
+                  "extreme": [13, 1, 0, 0, 0, 0, 0, 0, 0, 0,],
+                  }
+
+FORM_ARRAYS_PRIO = {"default": 2,
+                  "even": 0.5,
+                  "uneven": 1,
+                  "extreme": 0.8,
+                  }

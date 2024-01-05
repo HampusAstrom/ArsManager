@@ -1,5 +1,6 @@
 import numpy as np
 import copy
+import itertools
 
 def dict2string(dct, sort=True) -> str:
     if sort:
@@ -113,7 +114,7 @@ class Character:
                  characteristics: dict,
                  rng: np.random.Generator,
                  rel_prio_weight: float = 1,
-                 budget: int = 25,
+                 budget: int = 30,
                  chunk_mean: int = 5,
                  current_year: int = None,
                  char_info = None, # free field for notes or so
@@ -246,8 +247,48 @@ class Character:
         s += f"Forms: {dict2string(form)}\n"
         return s
 
+    # TODO add method for renaming ability (and fixing it through history)
+
+    # TODO add method to add xp without moving year to generate initial stats
+
+    # TODO add option to ignore/reduce some stats as weights with a mask
+    # to mask out things like having 5 in native language
+
+    # TODO add way to use function to readjust weights of existing xp
+    # both to handle diff between arts and abilities and to taper of skills
+    # like languages after they are mastered (lvl 4-6ish)
+
     # TODO consider if I need some @x.setter or @x.getter functions to 
     # return copies of variables
+
+def calc_used_xp(array: list, tpe: type) -> int:
+    sm = 0
+    for val in array:
+        t = tpe(val)
+        sm += t.tot_xp
+    return sm
+
+def calc_used_xp_total(abilites: list,
+                       tech: list,
+                       form: list,
+                       prnt: bool = True) -> tuple[int, int, int, int]:
+    sab = calc_used_xp(abilites, Ability)
+    ste = calc_used_xp(tech, Art)
+    sfo = calc_used_xp(form, Art)
+    tot = sab + ste + sfo
+    if prnt:
+        print(f"Total xp used {tot}")
+        print(f"Ability xp {sab}")
+        print(f"Technique xp {ste}")
+        print(f"Form xp {sfo}")
+        print()
+    return tot, sab, ste, sfo
+
+def pad_list_of_lists(lst: list):
+    ret = np.zeros([len(lst),len(max(lst,key = lambda x: len(x)))])
+    for i,j in enumerate(lst):
+        ret[i][0:len(j)] = j
+    return ret
 
 # some local temporary tests
 if __name__ == '__main__':
@@ -270,3 +311,188 @@ if __name__ == '__main__':
     print()
     print(Ability.val2xp(5))
     print(Ability.xp2val(70))
+
+    # Bjorn
+    bj_abilities = [1, 2, 2, 2, 1, 1, 1, 2, 2, 4, 5, 1, 3, 1, 1, 1, 1, 3,]
+    bj_tech = [0, 1, 10, 3, 1]
+    bj_form = [8, 0, 0, 8, 0, 0, 0, 0, 0, 0]
+    # Boni
+    bo_abilities = [1, 2, 2, 3, 2, 4, 1, 4, 5, 2, 1, 1, 3,]
+    bo_tech = [12, 0, 0, 0, 3,]
+    bo_form = [0, 0, 12, 4, 0, 0, 0, 0, 0, 0]
+
+    # Cria
+    cr_abilities = [1, 5, 3, 3+2, 1, 4, 2, 3, 5, 1, 1]
+    cr_abilities_wo = [1, 5, 3, 3, 1, 4, 2, 3, 5, 1, 1]
+    cr_tech = [4, 6, 4, 4, 4]
+    cr_form = [0, 0, 0, 0, 0, 0, 2, 1, 0, 10]
+
+    # Ex Misc
+    ex_abilities = [3, 1, 3, 3, 2, 4, 3, 5, 1, 2, 3]
+    ex_tech = [8, 0, 4, 3, 5,]
+    ex_form = [0, 0, 0, 1, 0, 0, 0, 0, 12+3, 0]
+    ex_form_wo = [0, 0, 0, 1, 0, 0, 0, 0, 12, 0]
+
+    # Flam
+    fl_abilities = [2, 1, 2, 3, 2, 1, 3, 1, 4, 5, 3, 1, 2, 1, 1]
+    fl_tech = [12, 0, 0, 4, 5]
+    fl_form = [0, 0, 0, 0, 0, 12+3, 0, 0, 1, 0]
+
+    # Guer
+    gu_abilities = [1, 3, 1, 2, 3, 1, 4, 2, 4, 3, 5, 1, 1]
+    gu_tech = [0, 12+3, 0, 2, 0,]
+    gu_form = [0, 0, 0, 5, 0, 0, 6, 6, 0, 0]
+
+    # Jerb
+    je_abilities = [1, 2, 3, 1, 2, 2, 2, 5, 3, 4+2, 5, 2, 1]
+    je_tech = [6, 1, 6, 1, 6,]
+    je_form = [0, 0, 0, 5, 0, 0, 10, 0, 0, 0]
+
+    # Merc
+    mc_abilities = [3, 1, 1, 1, 2, 4, 3, 5, 1, 2, 3, 4,]
+    mc_tech = [6+3, 4, 4, 3, 5,]
+    mc_form = [0, 0, 12+3, 2, 0, 0, 0, 2, 0, 0]
+
+    # Meri
+    mi_abilities = [1, 2, 3, 2, 5, 4, 3, 5, 2, 1,]
+    mi_tech = [5, 1, 5, 2, 5]
+    mi_form = [0, 0, 0, 1, 0, 0, 10+3, 5, 0, 0]
+
+    # Trem
+    tr_abilities = [1, 2, 1, 2, 2, 3, 2, 2, 4, 3, 3, 5, 2, 1, 3]
+    tr_tech = [5, 5, 5, 5, 5,]
+    tr_form = [0, 3, 6, 0, 0, 6, 0, 1, 6, 0]
+
+    # Tyta
+    ty_abilities = [1, 2, 2, 3, 2, 2, 2, 4, 2, 3, 5, 1]
+    ty_tech = [5, 5, 0, 0, 5,]
+    ty_form = [0, 0, 0, 0, 0, 0, 0, 9, 0, 0,]
+
+    # Verd
+    ve_abilities = [1, 3, 2, 5+2, 4+2, 2, 4, 3, 5, 1, 1,]
+    ve_tech = [7, 3, 5, 3, 5,]
+    ve_form = [0, 0, 0, 0, 0, 0, 0, 0, 12+3, 0]
+
+    template_abilities = [sorted(bj_abilities, reverse=True),
+                          sorted(bo_abilities, reverse=True),
+                          sorted(cr_abilities, reverse=True),
+                          sorted(ex_abilities, reverse=True),
+                          sorted(fl_abilities, reverse=True),
+                          sorted(gu_abilities, reverse=True),
+                          sorted(je_abilities, reverse=True),
+                          sorted(mc_abilities, reverse=True),
+                          sorted(mi_abilities, reverse=True),
+                          sorted(tr_abilities, reverse=True),
+                          sorted(ty_abilities, reverse=True),
+                          sorted(ve_abilities, reverse=True)]
+    template_tech = [sorted(bj_tech, reverse=True),
+                     sorted(bo_tech, reverse=True),
+                     sorted(cr_tech, reverse=True),
+                     sorted(ex_tech, reverse=True),
+                     sorted(fl_tech, reverse=True),
+                     sorted(gu_tech, reverse=True),
+                     sorted(je_tech, reverse=True),
+                     sorted(mc_tech, reverse=True),
+                     sorted(mi_tech, reverse=True),
+                     sorted(tr_tech, reverse=True),
+                     sorted(ty_tech, reverse=True),
+                     sorted(ve_tech, reverse=True)]
+    template_form = [sorted(bj_form, reverse=True),
+                     sorted(bo_form, reverse=True),
+                     sorted(cr_form, reverse=True),
+                     sorted(ex_form, reverse=True),
+                     sorted(fl_form, reverse=True),
+                     sorted(gu_form, reverse=True),
+                     sorted(je_form, reverse=True),
+                     sorted(mc_form, reverse=True),
+                     sorted(mi_form, reverse=True),
+                     sorted(tr_form, reverse=True),
+                     sorted(ty_form, reverse=True),
+                     sorted(ve_form, reverse=True)]
+
+    mean_char_xp = 0
+    mean_ab_xp = 0
+    mean_te_xp = 0
+    mean_fo_xp = 0
+    std_char_xp = 0
+    std_ab_xp = 0
+    std_te_xp = 0
+    std_fo_xp = 0
+    n = 12
+    for i in range(n):
+        tot, sab, ste, sfo = calc_used_xp_total(template_abilities[i],
+                                           template_tech[i],
+                                           template_form[i])
+        mean_char_xp += tot/n
+        mean_ab_xp += sab/n
+        mean_te_xp += ste/n
+        mean_fo_xp += sfo/n
+    for i in range(12):
+        tot, sab, ste, sfo = calc_used_xp_total(template_abilities[i],
+                                           template_tech[i],
+                                           template_form[i],
+                                           prnt=False)
+        std_char_xp += ((tot-mean_char_xp)**2)/n
+        std_ab_xp += ((sab-mean_ab_xp)**2)/n
+        std_te_xp += ((ste-mean_te_xp)**2)/n
+        std_fo_xp += ((sfo-mean_fo_xp)**2)/n
+
+    print(f"Mean char xp: {mean_char_xp} +- {np.sqrt(std_char_xp)}")
+    print(f"Mean ability xp: {mean_ab_xp} +- {np.sqrt(std_ab_xp)}")
+    print(f"Mean tech xp: {mean_te_xp} +- {np.sqrt(std_te_xp)}")
+    print(f"Mean form xp: {mean_fo_xp} +- {np.sqrt(std_fo_xp)}")
+
+    max_ab_length = 0
+    for list in template_abilities:
+        if len(list) > max_ab_length:
+            max_ab_length = len(list)
+
+    mean_ab_array = np.array([0.]*max_ab_length)
+    mean_te_array = np.array([0.]*5)
+    mean_fo_array = np.array([0.]*10)
+
+    template_abilities_padded = zip(*itertools.zip_longest(*template_abilities,
+                                                           fillvalue=0))
+
+    for ab, te, fo in zip(template_abilities_padded, template_tech, template_form):
+        mean_ab_array += np.array(sorted(ab, reverse=True))/12
+        mean_te_array += np.array(sorted(te, reverse=True))/12
+        mean_fo_array += np.array(sorted(fo, reverse=True))/12
+
+    print(mean_ab_array)
+    print(mean_te_array)
+    print(mean_fo_array)
+
+    template_abilities_arranged = np.array(pad_list_of_lists(template_abilities))
+    median_ab_array = np.median(template_abilities_arranged, axis=0)
+    print(median_ab_array)
+    print(template_abilities_arranged)
+
+    default_ability_array = [5, 4, 4, 3, 3, 3, 2, 2, 2, 1, 1, 1, 1, 1,] # rest should be 0
+    default_tech_array = [9, 6, 3, 2, 0]
+    deafult_form_array = [10, 8, 1, 0, 0, 0, 0, 0, 0, 0,]
+    tot, sab, ste, sfo = calc_used_xp_total(default_ability_array,
+                                            default_tech_array,
+                                            deafult_form_array)
+
+    # it's not recommended to have both tech and form as even
+    even_ability_array = [5, 4, 3, 3, 3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1,] # rest should be 0
+    even_tech_array = [8, 5, 5, 3, 2]
+    even_form_array = [8, 6, 5, 4, 3, 2, 1, 0, 0, 0,]
+    tot, sab, ste, sfo = calc_used_xp_total(even_ability_array,
+                                            even_tech_array,
+                                            even_form_array)
+
+    uneven_ability_array = [6, 5, 4, 3, 3, 2, 2, 1, 1, 1,] # rest should be 0
+    uneven_tech_array = [10, 5, 3, 0, 0]
+    uneven_form_array = [12, 4, 2, 1, 0, 0, 0, 0, 0, 0,]
+    tot, sab, ste, sfo = calc_used_xp_total(uneven_ability_array,
+                                            uneven_tech_array,
+                                            uneven_form_array)
+
+    extreme_ability_array = [7, 5, 4, 3, 2, 2, 1, 1,] # rest should be 0
+    extreme_tech_array = [11, 3, 2, 0, 0]
+    extreme_form_array = [13, 1, 0, 0, 0, 0, 0, 0, 0, 0,]
+    tot, sab, ste, sfo = calc_used_xp_total(extreme_ability_array,
+                                            extreme_tech_array,
+                                            extreme_form_array)
