@@ -20,7 +20,7 @@ class Ability:
                  ) -> None:
         if tot_xp:
             self._tot_xp = 0
-            self.addxp(xp)
+            self.add_xp(xp)
         else:
             self.set_val(value, xp)
 
@@ -62,7 +62,7 @@ class Ability:
     @tot_xp.setter
     def tot_xp(self, xp: int) -> None:
         self._tot_xp = 0
-        self.addxp(xp)
+        self.add_xp(xp)
 
     @property
     def value(self) -> int:
@@ -305,6 +305,10 @@ if __name__ == '__main__':
     cr = Art(8, xp=5)
     print(f"val {cr.value}, tot {cr.tot_xp}")
     cr.add_xp(23)
+    print(cr.value)
+    print(cr.get_rest_xp())
+    print(cr.tot_xp)
+    cr.tot_xp = 50
     print(cr.value)
     print(cr.get_rest_xp())
     print(cr.tot_xp)
