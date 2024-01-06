@@ -180,6 +180,7 @@ def gen_from_stats_array(template: str,
                          char_input_year: int = 1220,
                          char_input_age: int = 25,
                          rel_prio_weight: float = 1,
+                         budget: int = 30,
                          ) -> Character:
     ch, ab, te, fo = get_template(template)
     if template == "Certamen":
@@ -272,13 +273,15 @@ def gen_from_stats_array(template: str,
                         characteristics,
                         rng,
                         rel_prio_weight,
+                        budget = budget
                     )
 
 if __name__ == '__main__':
     rng = np.random.default_rng()
     testy = gen_from_stats_array("Certamen",
                                  "Testy McCertamen",
-                                 rel_prio_weight=0.1)
+                                 rel_prio_weight=0.1,
+                                 budget = 20)
     print(testy)
     testy.set_to_year(1240)
     print(testy)
@@ -286,7 +289,8 @@ if __name__ == '__main__':
     print(testy)
     testa = gen_from_stats_array("Certamen",
                                  "Testa McCertamen",
-                                 rel_prio_weight=0.5)
+                                 rel_prio_weight=0.5,
+                                 budget = 20)
     print(testa)
     testa.set_to_year(1240)
     print(testa)
