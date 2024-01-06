@@ -252,7 +252,8 @@ def gen_from_stats_array(template: str,
                         characteristics,
                         rng,
                         rel_prio_weight,
-                        budget = budget
+                        budget = budget,
+                        softcapped_stats=SOFTCAPPED_STATS
                     )
 
 if __name__ == '__main__':

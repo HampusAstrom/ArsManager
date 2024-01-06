@@ -114,9 +114,11 @@ class Character:
                  characteristics: dict,
                  rng: np.random.Generator,
                  rel_prio_weight: float = 1,
+                 rel_art_xp_weight: float = 2,
                  budget: int = 30,
                  chunk_mean: int = 5,
                  current_year: int = None,
+                 softcapped_stats: dict = None,
                  char_info = None, # free field for notes or so
                  ) -> None:
         assert char_input_age >= 0
@@ -130,11 +132,16 @@ class Character:
         self.characteristics = characteristics
         self.rng = rng
         self.rel_prio_weight = rel_prio_weight
+        self.rel_art_xp_weight = rel_art_xp_weight
         self.prios = prios
         self.budget = budget
         self.chunk_mean = chunk_mean
         self.stats = stats
         self.history = {char_input_year: copy.deepcopy(stats)}
+        if softcapped_stats is None:
+            self.softcapped_stats = {}
+        else:
+            self.softcapped_stats = softcapped_stats
         if current_year is None:
             current_year = char_input_year
         self.set_to_year(current_year)
@@ -167,15 +174,26 @@ class Character:
         self.set_to_year(self._current_year + years)
 
     def _step_stats(self, prev_stats: dict) -> dict:
+        assert self.check_same_keys(prev_stats, self.prios)
         stats = copy.deepcopy(prev_stats)
         rng = self.rng
         off = int(self.chunk_mean/2) # default chunk offset range
         budget = self.budget # TODO budget could depend on age later
         # build weight measure
-        temp = sorted(stats.items())
-        keys, sts = zip(*temp)
-        pri = [value for key,value in sorted(self.prios.items())]
-        sts = [int(value.tot_xp) for value in sts]
+
+        temp_stats = dict(sorted(copy.deepcopy(stats).items()))
+        keys = list(temp_stats.keys())
+        # filter out xp weight of softcapped skills like languages
+        # if cap is reached we give no weight from xp, only prio
+        for key, cap in self.softcapped_stats.items():
+            if key in temp_stats and temp_stats[key].value >= cap:
+                temp_stats[key] = 0
+        # adjust (most often increase) weight from current xp of arts
+        for key, stat in temp_stats.items():
+            if isinstance(stat, Art):
+                temp_stats[key].tot_xp *= self.rel_art_xp_weight
+        pri = [weight for key,weight in sorted(self.prios.items())]
+        sts = [int(stat.tot_xp) for stat in temp_stats.values()]
         weight = self.calc_weights(np.array(sts),
                                    np.array(pri),
                                    self.rel_prio_weight)

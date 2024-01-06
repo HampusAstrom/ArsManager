@@ -347,3 +347,16 @@ CHAR_ARRAYS = {"default": {"prio": [40, 2, 1, 5, 2, 2, 1, 2], # prio
                            2: [5, 3, 2, 0, 0, -1, -1, -3], # +2 IC/GC
                            }
                }
+
+# Softcapped stats are mostly languages that you seldom what above 5
+# keys are names of softcapped abilities, value is at what skill value cap starts
+# most languages are listed as generic, we need to make sure that the effect
+# remains when they are replaced with real names
+SOFTCAPPED_STATS = {"Latin": 5,
+                    "Classic Greek": 5,
+                    "Arabic": 5,
+                    "Native Language": 5,
+                    "Foreign Language 1": 5,
+                    "Foreign Language 2": 5,
+                    "(Dead Language)": 5,
+                    }
