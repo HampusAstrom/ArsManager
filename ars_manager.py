@@ -31,31 +31,10 @@ def get_template(name: str) -> tuple[list, list, list]:
 
 # designed for mages, at least change prio for other characters
 def get_characteristics_array(balance: str = "default", ic: int = 1):
-    options = {"default": {"prio": [40, 2, 1, 5, 2, 2, 1, 2], # prio
-                           0: [3, 2, 1, 1, 0, 0, -1, -2], # 0 IC/GC
-                           1: [3, 2, 2, 1, 1, 0, -1, -2], # +1 IC/GC
-                           2: [3, 2, 2, 1, 1, 0, -1, -1], # +2 IC/GC
-                           },
-               "even": {"prio": [40, 2, 1, 5, 2, 2, 1, 2], # prio
-                        0: [3, 1, 1, 1, 0, 0, -1, -1], # 0 IC/GC
-                        1: [3, 1, 1, 1, 1, 0, 0, 0], # +1 IC/GC
-                        2: [3, 2, 1, 1, 1, 1, 0, 0], # +2 IC/GC
-                         },
-               "uneven": {"prio": [20, 2, 1, 5, 2, 2, 1, 2], # prio
-                          0: [3, 2, 2, 0, 0, -1, -1, -2], # 0 IC/GC
-                          1: [4, 2, 2, 0, 0, -1, -1, -2], # +1 IC/GC
-                          2: [4, 3, 2, 0, 0, -1, -1, -2], # +2 IC/GC
-                          },
-               "extreme": {"prio": [20, 2, 1, 5, 2, 2, 1, 2], # prio
-                           0: [3, 3, 2, 0, 0, -1, -1, -3], # 0 IC/GC
-                           1: [4, 3, 2, 0, 0, -1, -1, -3], # +1 IC/GC
-                           2: [5, 3, 2, 0, 0, -1, -1, -3], # +2 IC/GC
-                           }
-              }
     names = ["Int", "Per", "Str", "Sta", "Pre", "Com", "Dex", "Qik",]
     return assign_array(names,
-                        options[balance][ic],
-                        options[balance]["prio"],
+                        CHAR_ARRAYS[balance][ic],
+                        CHAR_ARRAYS[balance]["prio"],
                         int)
 
 def shift_abilities(ab_dict: dict,
