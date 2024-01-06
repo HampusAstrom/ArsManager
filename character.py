@@ -187,7 +187,7 @@ class Character:
         # if cap is reached we give no weight from xp, only prio
         for key, cap in self.softcapped_stats.items():
             if key in temp_stats and temp_stats[key].value >= cap:
-                temp_stats[key] = 0
+                temp_stats[key] = Ability(0)
         # adjust (most often increase) weight from current xp of arts
         for key, stat in temp_stats.items():
             if isinstance(stat, Art):
