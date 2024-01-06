@@ -360,3 +360,10 @@ SOFTCAPPED_STATS = {"Latin": 5,
                     "Foreign Language 2": 5,
                     "(Dead Language)": 5,
                     }
+
+MAGE_REQUIRED_STATS = {"Native Language": 5,
+                       "Latin": 4,
+                       "Magic Theory": 3,
+                       "Artes Liberales": 1,
+                       "Parma Magica": 1,
+                       }

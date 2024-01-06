@@ -2,6 +2,7 @@ import numpy as np
 from character import Character, Ability, Art
 from collections import defaultdict
 from  lists_and_data import *
+import copy
 
 # initiate default rng
 rng = np.random.default_rng()
@@ -206,10 +207,16 @@ def gen_from_stats_array(template: str,
         prios, area_prios = gen_ability_prio(secondary_region="Africa")
         ab_array, te_array, fo_array = select_arrays()
 
-        # TODO handle special cases: required stats like native language
+        # TODO allow higher on special cases, at least magic theory and artes liberales
+        prios_partial = copy.deepcopy(prios)
+        abilities = {}
+        for key, val in MAGE_REQUIRED_STATS.items():
+            ab_array.remove(val)
+            prios_partial.pop(key)
+            abilities[key] = Ability(val)
 
         # assign the rest
-        abilities = assign_array_prio_dict(prios,
+        abilities |= assign_array_prio_dict(prios_partial,
                                            ab_array,
                                            Ability)
         techniques = assign_array(te, te_array, None, Art)
