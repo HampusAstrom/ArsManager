@@ -27,6 +27,9 @@ class Ability:
     def __str__(self) -> str:
         return str(self._value)
 
+    def __repr__(self):
+        return self.__str__()
+
     def __int__(self) -> int:
         return int(self._value)
 

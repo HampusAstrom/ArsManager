@@ -99,10 +99,17 @@ def gen_ability_prio(primary_region: str = "default",
 
     return ability_prios, area_prios
 
+def add_req_to_prio(prio: dict, req: dict) -> dict:
+    for key, val in req.items():
+        if key not in prio:
+            prio[key] = 0.00000001
+    return prio
+
 def assign_array_prio_dict(dct: dict,
                            array: list,
                            tpe: type,
                            area: bool = False,
+                           req: dict = None,
                            ) -> dict:
     prio = []
     names = []
@@ -112,11 +119,19 @@ def assign_array_prio_dict(dct: dict,
             prio.append(p[1])
         else:
             prio.append(p)
+    if req:
+        for n, p in req.items():
+            if n not in names:
+                names.append(n)
+                prio.append(0.00000001)
+
     # TODO handle array longer than prio
     # pad array with 0s if longer than names
     if len(names) > len(array):
         extra = len(names) - len(array)
         array += [0]*extra
+    if req is not None:
+        return _assign_array_with_min_req(names, array, prio, tpe, req)
     return assign_array(names, array, prio, tpe)
 
 # TODO adjust so that partial lists can be assigned too
@@ -134,6 +149,45 @@ def assign_array(names: list,
                      p=np.array(prio)/sum(prio))
     return sort_by_name_list(names,
                              {name: tpe(val) for name, val in zip(nms, array)})
+
+def _assign_array_with_min_req(names: list,
+                 array: list,
+                 prio: list,
+                 tpe: type,
+                 req: dict,
+                 ) -> dict:
+    if not req:
+        return assign_array(names, array, prio, tpe)
+    if prio == None:
+        prio = [1]*len(names)
+    # sort req by value
+    req = list(sorted(req.items(), key=lambda x:x[1], reverse=True))
+    nms = rng.choice(names,
+                     len(names),
+                     replace=False,
+                     p=np.array(prio)/sum(prio))
+    ret_dict = {}
+    nms = list(nms)
+    while(len(array)>0):
+        if not array:
+            break
+        val = array.pop(0)
+        if req and val < req[0][1]:
+            raise Exception("Required value cannot be assigned!")
+        if req and val == req[0][1]:
+            ret_dict[req[0][0]] = tpe(val)
+            if req[0][0] in nms:
+                nms.remove(req[0][0])
+            req.pop(0)
+        else:
+            name = nms.pop(0)
+            ret_dict[name] = tpe(val)
+            req_names = [k for k, v in req]
+            if name in req_names:
+                index = req_names.index(name)
+                req.pop(index)
+    return sort_by_name_list(names, ret_dict)
+
 
 def select_arrays() -> tuple[list, list, list]:
     ab_setting = select_array(ABILITY_ARRAYS, ABILITY_ARRAYS_PRIO)
@@ -207,18 +261,11 @@ def gen_from_stats_array(template: str,
         prios, area_prios = gen_ability_prio(secondary_region="Africa")
         ab_array, te_array, fo_array = select_arrays()
 
-        # TODO allow higher on special cases, at least magic theory and artes liberales
-        prios_partial = copy.deepcopy(prios)
-        abilities = {}
-        for key, val in MAGE_REQUIRED_STATS.items():
-            ab_array.remove(val)
-            prios_partial.pop(key)
-            abilities[key] = Ability(val)
-
-        # assign the rest
-        abilities |= assign_array_prio_dict(prios_partial,
+        prios = add_req_to_prio(prios, MAGE_REQUIRED_STATS)
+        abilities = assign_array_prio_dict(prios,
                                            ab_array,
-                                           Ability)
+                                           Ability,
+                                           req = MAGE_REQUIRED_STATS)
         techniques = assign_array(te, te_array, None, Art)
         forms = assign_array(fo, fo_array, None, Art)
 
