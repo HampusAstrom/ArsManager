@@ -117,7 +117,7 @@ class Character:
                  characteristics: dict,
                  rng: np.random.Generator,
                  rel_prio_weight: float = 1,
-                 rel_art_xp_weight: float = 2,
+                 rel_art_xp_weight: float = 1.2,
                  budget: int = 30,
                  chunk_mean: int = 5,
                  current_year: int = None,

@@ -53,7 +53,7 @@ def shift_abilities(ab_dict: dict,
 def gen_ability_prio(primary_region: str = "default",
                      secondary_region: str = "default",
                      all_skills=False) -> tuple[dict, dict]:
-    to_assign_array = [3, 2, 1, 1, 0.5, 0.2, 0.1, 0, 0, 0, 0, 0, 0, 0]
+    to_assign_array = [5, 2, 1, 1, 0.5, 0.2, 0.1, 0, 0, 0, 0, 0, 0, 0]
     area_prios = assign_array_prio_dict(SKILL_AREAS, to_assign_array, float, area=True)
 
     print(area_prios)
@@ -346,7 +346,9 @@ if __name__ == '__main__':
     print()
     examplo = gen_from_stats_array("Mage",
                                    "Examplo de Magicus",
-                                   rel_prio_weight=0.5)
+                                   rel_prio_weight=0.5,
+                                   budget=35,
+                                   )
     print(examplo)
     examplo.add_years(20)
     print(examplo)
@@ -354,3 +356,4 @@ if __name__ == '__main__':
     print(examplo)
     examplo.add_years(20)
     print(examplo)
+    print(examplo.prios)

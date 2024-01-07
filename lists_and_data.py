@@ -69,8 +69,8 @@ SUPABILITIES = ["Animal Ken",
                 "Wilderness Sense",]
 
 MAGIC = {"Magic Theory": 20,
-         "Latin": 4,
-         "Parma Magica": 3,
+         "Latin": 2,
+         "Parma Magica": 5,
          "Classic Greek": 0.5,
          "Artes Liberales": 3,
          "Philosophiae": 2,
@@ -257,7 +257,7 @@ SUPERNATURAL = {"Animal Ken": 1,
                 }
 
 # skill areas with respective dictionaries and default prio
-SKILL_AREAS = {"Magic": (MAGIC, 12),
+SKILL_AREAS = {"Magic": (MAGIC, 20),
                "Adventure": (ADVENTURE, 2),
                "Social": (SOCIAL, 1),
                "Martial": (MARTIAL, 0.1),
