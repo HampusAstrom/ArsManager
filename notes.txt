@@ -145,3 +145,23 @@ Extreme
 [4, 3, 2, 0, 0, -1, -1, -3] # +1 IC/GC
 [5, 3, 2, 0, 0, -1, -1, -3] # +2 IC/GC
 [20, 2, 1, 5, 2, 2, 1, 2] # prio
+
+# test how much xp on example char
+# early childhood gives 5 in language (75xp) and 45xp (5 years)
+# later life is 15xp per year (5 years = 75xp)
+# apprenticeship is 240 xp (15 years) (and 120 in spell levels but we dont' track that)
+# 30 xp per year after that, but not relevant here
+# fixed req is 5 native (75), 1 artes liberales (5), 4 Latin (50)
+# 3 magic theory (30), 1 parma magica (5) for a total of 165 xp
+# out of the total of 435 to be allocated (ignoring xp virtues)
+
+
+TODOS
+rename code in ars_manager.py to char_generator.py or so
+make core ars_manager file that saves and loads data,
+tracks a set of characters (and possibly groups them based on markers
+like covenant, house and tribunal as well as order if not hermetic...)
+ui should also be here or in a separate file called from here. Used to
+generate characters, adjust them and re-generate parts of them, display
+already made characters and their level progression and so on. Also to
+rename abilitites with generic names and possibly hand change some stats

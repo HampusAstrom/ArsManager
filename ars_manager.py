@@ -88,13 +88,13 @@ def gen_ability_prio(primary_region: str = "default",
     # regional adjustments
     if primary_region in ["Greece", "Greek"]:
         ability_prios = shift_abilities(ability_prios, GREEK_SHIFT)
-    if primary_region in ["Middle East", "Africa"]:
+    if primary_region in ["Middle East", "Africa", "Arabia", "Arabic"]:
         ability_prios = shift_abilities(ability_prios, ARABIC_SHIFT)
     if primary_region in ["England", "British Isles"]:
         ability_prios = shift_abilities(ability_prios, ENGLISH_SHIFT)
 
     # TODO improve to full handling
-    if secondary_region in ["Middle East", "Africa"]:
+    if secondary_region in ["Middle East", "Africa", "Arabia", "Arabic"]:
         ability_prios["Arabic"] += ability_prios.pop("Foreign Language 1")
 
     return ability_prios, area_prios
@@ -310,7 +310,7 @@ def gen_from_stats_array(template: str,
                         softcapped_stats=SOFTCAPPED_STATS
                     )
 
-if __name__ == '__main__':
+def example_use():
     rng = np.random.default_rng()
     testy = gen_from_stats_array("Certamen",
                                  "Testy McCertamen",
@@ -334,15 +334,6 @@ if __name__ == '__main__':
     for i in range(10):
         print(get_characteristics_array(balance="uneven", ic=1))
 
-    # test how much xp on example char
-    # early childhood gives 5 in language (75xp) and 45xp (5 years)
-    # later life is 15xp per year (5 years = 75xp)
-    # apprenticeship is 240 xp (15 years) (and 120 in spell levels but we dont' track that)
-    # 30 xp per year after that, but not relevant here
-    # fixed req is 5 native (75), 1 artes liberales (5), 4 Latin (50)
-    # 3 magic theory (30), 1 parma magica (5) for a total of 165 xp
-    # out of the total of 435 to be allocated (ignoring xp virtues)
-
     print()
     examplo = gen_from_stats_array("Mage",
                                    "Examplo de Magicus",
@@ -357,3 +348,6 @@ if __name__ == '__main__':
     examplo.add_years(20)
     print(examplo)
     print(examplo.prios)
+
+if __name__ == '__main__':
+    example_use()
