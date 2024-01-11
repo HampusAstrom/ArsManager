@@ -5,6 +5,7 @@ import json
 from typing import List
 from character import Character, Ability, Art
 import char_generator as ch
+from functools import partial
 
 def wrapped_default(self, obj):
     return getattr(obj.__class__, "__json__", wrapped_default.default)(obj)
@@ -84,7 +85,7 @@ class Setting:
 class SortableTable(ttk.Treeview):
     def __init__(self, parent, columns, data, *args, **kwargs):
         ttk.Treeview.__init__(self, parent, columns=columns, *args, **kwargs)
-        self.heading("#0", text="Index")
+        # self.heading("#0", text="Index")
         for col in columns:
             self.heading(col, text=col, command=lambda c=col: self.sortby(c, 0))
             self.column(col, width=100, anchor="center", stretch=True)
@@ -100,7 +101,7 @@ class SortableTable(ttk.Treeview):
     def populate_table(self, data):
         self.data = data
         for i, item in enumerate(self.data):
-            self.insert("", "end", values=(i,) + tuple(item))
+            self.insert("", "end", values=tuple(item))
 
 class ArsManager:
     def __init__(self, root):
@@ -121,7 +122,7 @@ class ArsManager:
         file_menu.add_command(label="New Setting", command=self.new_setting)
         file_menu.add_command(label="Save Setting", command=self.save_setting)
         file_menu.add_command(label="Load Setting", command=self.load_setting)
-        file_menu.add_command(label="New Character", command=self.new_character)
+        file_menu.add_command(label="New Character", command=self.create_character_popup)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.destroy)
 
@@ -186,12 +187,6 @@ class ArsManager:
         # Run the Tkinter main loop for the popup window
         popup.mainloop()
 
-    def new_character(self):
-        # Assuming you have a function to create a new character instance
-        new_char = self.create_new_character()
-        self.setting.add_character(new_char)
-        self.update_table()
-
     def save_setting(self):
         file_path = filedialog.asksaveasfilename(
             defaultextension=".json", filetypes=[("JSON files", "*.json")]
@@ -226,13 +221,140 @@ class ArsManager:
         ]
         self.tree.populate_table(data)
 
-    # TODO replace with real method/window
-    def create_new_character(self):
-        values = ch.gen_mage_values()
-        return ch.create_mage_from_generated_values("Examplo de Magicus",
+    def create_new_character(self,
+                             name,
+                             values,
+                             ):
+        new_char =  ch.create_mage_from_generated_values(name,
                                                     values,
                                                     rel_prio_weight=0.5,
                                                     budget=35)
+        self.setting.add_character(new_char)
+        self.update_table()
+
+    def create_character_popup(self):
+        # Create a new Toplevel window (popup) for character creation
+        popup = tk.Toplevel(self.root)
+        popup.title("Create New Character")
+
+        # Label and Entry for the user to input the character name
+        name_label = tk.Label(popup, text="Enter Character Name:")
+        name_label.pack(pady=10)
+
+        name_entry = tk.Entry(popup)
+        name_entry.pack(pady=10)
+
+        # Dropdown menu for character type
+        # type_label = tk.Label(popup, text="Select Character Type:")
+        # type_label.pack(pady=10)
+
+        # type_options = ["Mage", "Warrior", "Rogue"]  # Customize based on your character types
+        # type_var = tk.StringVar(value=type_options[0])
+
+        # type_menu = tk.OptionMenu(popup, type_var, *type_options)
+        # type_menu.pack(pady=10)
+
+        # Labels to display the generated stats
+        characteristics_label = tk.Label(popup, text="Characteristics:")
+        characteristics_label.pack(pady=10)
+
+        abilities_label = tk.Label(popup, text="Abilities:")
+        abilities_label.pack(pady=10)
+
+        techniques_label = tk.Label(popup, text="Techniques:")
+        techniques_label.pack(pady=10)
+
+        forms_label = tk.Label(popup, text="Forms:")
+        forms_label.pack(pady=10)
+
+        values = ch.gen_mage_values()
+        # Update the displayed values for characteristics, abilities, etc.
+        characteristics_label.config(text=f"Characteristics: {values['characteristics']}")
+        abilities_label.config(text=f"Abilities: {values['abilities']}")
+        techniques_label.config(text=f"Techniques: {values['techniques']}")
+        forms_label.config(text=f"Forms: {values['forms']}")
+
+        # Function to generate random character stats
+        def generate_random_stats(values):
+            # Customize based on your stat generation function
+            values['characteristics'] = ch.get_characteristics_from_array()
+            values['abilities'], values['ab_prios'], values['area_prios'] = ch.get_abilities_from_array()
+            values['techniques'], values['te_prios'] = ch.get_techniques_from_array()
+            values['forms'], values['fo_prios'] = ch.get_forms_from_array()
+
+            # Update the displayed values for characteristics, abilities, etc.
+            characteristics_label.config(text=f"Characteristics: {values['characteristics']}")
+            abilities_label.config(text=f"Abilities: {values['abilities']}")
+            techniques_label.config(text=f"Techniques: {values['techniques']}")
+            forms_label.config(text=f"Forms: {values['forms']}")
+
+        def gen_characteristics(values):
+            values['characteristics'] = ch.get_characteristics_from_array()
+            characteristics_label.config(text=f"Characteristics: {values['characteristics']}")
+
+        def gen_abilities(values):
+            values['abilities'], values['ab_prios'], values['area_prios'] = ch.get_abilities_from_array()
+            abilities_label.config(text=f"Abilities: {values['abilities']}")
+
+        def gen_techniques(values):
+            values['techniques'], values['te_prios'] = ch.get_techniques_from_array()
+            techniques_label.config(text=f"Techniques: {values['techniques']}")
+
+        def gen_forms(values):
+            values['forms'], values['fo_prios'] = ch.get_forms_from_array()
+            forms_label.config(text=f"Forms: {values['forms']}")
+
+        # Button to generate random character stats
+        generate_button = ttk.Button(popup, text="Generate Random Stats",
+                                     command=partial(generate_random_stats,
+                                                     values))
+        generate_button.pack(pady=10)
+
+        # Buttons to regenerate each section
+        gen_characteristics_b = ttk.Button(popup,
+                                           text="Regenerate Characteristics",
+                                           command=partial(gen_characteristics,
+                                                           values))
+        gen_characteristics_b.pack(pady=5)
+
+        gen_abilities_b = ttk.Button(popup,
+                                     text="Regenerate Abilities",
+                                     command=partial(gen_abilities,
+                                                     values))
+        gen_abilities_b.pack(pady=5)
+
+        gen_techniques_b = ttk.Button(popup,
+                                      text="Regenerate Techniques",
+                                      command=partial(gen_techniques,
+                                                      values))
+        gen_techniques_b.pack(pady=5)
+
+        gen_forms_b = ttk.Button(popup,
+                                 text="Regenerate Forms",
+                                 command=partial(gen_forms,
+                                                 values))
+        gen_forms_b.pack(pady=5)
+
+        def save_and_close_popup(self, name, values):
+            if not name or name in self.setting.characters:
+                tk.messagebox.showwarning("Warning",
+                                          "Please enter a unique character name.")
+                return  # Don't proceed further if the name is empty
+            self.create_new_character(name, values)
+            # Close the popup
+            popup.destroy()
+
+        # Save Character button
+        save_button = ttk.Button(popup,
+                                 text="Save Character",
+                                 command=lambda:
+                                 save_and_close_popup(self, name_entry.get(),
+                                                      values))
+        save_button.pack(pady=10)
+
+        # Run the Tkinter main loop for the popup window
+        popup.mainloop()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
