@@ -127,6 +127,7 @@ def assign_array_prio_dict(dct: dict,
 
     # TODO handle array longer than prio
     # pad array with 0s if longer than names
+    array = copy.deepcopy(array)
     if len(names) > len(array):
         extra = len(names) - len(array)
         array += [0]*extra
@@ -143,6 +144,7 @@ def assign_array(names: list,
                  ) -> dict:
     if prio == None:
         prio = [1]*len(names)
+    array = copy.deepcopy(array)
     nms = rng.choice(names,
                      len(names),
                      replace=False,
@@ -161,6 +163,7 @@ def _assign_array_with_min_req(names: list,
     if prio == None:
         prio = [1]*len(names)
     # sort req by value
+    array = copy.deepcopy(array)
     req = list(sorted(req.items(), key=lambda x:x[1], reverse=True))
     nms = rng.choice(names,
                      len(names),
