@@ -1,6 +1,8 @@
 import numpy as np
 import copy
 import itertools
+import json
+import importlib
 
 def dict2string(dct, sort=True) -> str:
     if sort:
@@ -35,6 +37,9 @@ class Ability:
 
     def __float__(self) -> int:
         return float(self._value)
+
+    def __json__(self):
+        return {"xp": self._tot_xp, "cls": str(self.__class__.__name__)}
 
     @staticmethod
     def xp2val(xp: int) -> tuple[int, int]:
@@ -82,7 +87,7 @@ class Ability:
 # it is stored in a stats dict
 class Art(Ability):
     def __init__(self,
-                 value: int,
+                 value: int = 0,
                  xp: int = 0,
                  tot_xp: bool = False
                  ) -> None:
@@ -115,13 +120,14 @@ class Character:
                  stats: dict,
                  prios: dict,
                  characteristics: dict,
-                 rng: np.random.Generator,
+                 rng: np.random.Generator = None,
                  rel_prio_weight: float = 1,
                  rel_art_xp_weight: float = 1.2,
                  budget: int = 30,
                  chunk_mean: int = 5,
                  current_year: int = None,
                  softcapped_stats: dict = None,
+                 groups: dict = None,
                  char_info = None, # free field for notes or so
                  ) -> None:
         assert char_input_age >= 0
@@ -129,6 +135,8 @@ class Character:
         assert chunk_mean > 0
         assert self.check_same_keys(stats, prios)
         self.name = name
+        # groups: organized like groups in setting type as key names in values
+        self.groups = groups
         self.char_info = char_info
         self.char_input_year = char_input_year
         self.char_input_age = char_input_age
@@ -262,11 +270,43 @@ class Character:
         s += f"Characteristics: {dict2string(self.characteristics, sort=False)}\n"
         abilites, arts = self.get_arts_and_abilities()
         tech, form = self.separate_tech_and_form(arts)
-        # TODO clean up this nested mess
         s += f"Abilities: {dict2string(abilites)}\n"
         s += f"Techniques: {dict2string(tech)}\n"
         s += f"Forms: {dict2string(form)}\n"
         return s
+
+    def __json__(self):
+        # Customize serialization for the Character class
+        return {
+            "name": self.name,
+            "groups": self.groups,
+            "char_info": self.char_info,
+            "char_input_year": self.char_input_year,
+            "char_input_age": self.char_input_age,
+            "characteristics": self.characteristics,
+            "stats": self.stats,
+            "prios": self.prios,
+            "rng": self.rng.bit_generator.state,
+            # ... (add other attributes you want to serialize)
+        }
+
+    @classmethod
+    def from_json(cls, serialized_data):
+        # Customize deserialization for the Character class
+        stats = {}
+        for name, info in serialized_data["stats"].items():
+            FoundClass = getattr(importlib.import_module("character"), info["cls"])
+            stats[name] = FoundClass(xp = info["xp"], tot_xp = True)
+
+        return cls(
+            name=serialized_data["name"],
+            char_input_year=serialized_data["char_input_year"],
+            char_input_age=serialized_data["char_input_age"],
+            stats=stats,
+            prios=serialized_data["prios"],
+            characteristics=serialized_data["characteristics"],
+            # ... (add other attributes you want to deserialize)
+        )
 
     # TODO add method for renaming ability (and fixing it through history)
 
