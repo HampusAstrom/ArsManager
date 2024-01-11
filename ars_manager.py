@@ -228,11 +228,11 @@ class ArsManager:
 
     # TODO replace with real method/window
     def create_new_character(self):
-        if len(self.setting.characters) > 0:
-            name = "Examplo de Magicus2"
-        else:
-            name = "Examplo de Magicus1"
-        return ch.gen_from_stats_array("Mage", name, rel_prio_weight=0.5, budget=35)
+        values = ch.gen_mage_values()
+        return ch.create_mage_from_generated_values("Examplo de Magicus",
+                                                    values,
+                                                    rel_prio_weight=0.5,
+                                                    budget=35)
 
 if __name__ == "__main__":
     root = tk.Tk()

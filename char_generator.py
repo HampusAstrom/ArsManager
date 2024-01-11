@@ -31,12 +31,81 @@ def get_template(name: str) -> tuple[list, list, list]:
         raise Exception(f"There is no template named {name}") 
 
 # designed for mages, at least change prio for other characters
-def get_characteristics_array(balance: str = "default", ic: int = 1):
+def get_characteristics_from_array(balance: str = "default", ic: int = 1):
     names = ["Int", "Per", "Str", "Sta", "Pre", "Com", "Dex", "Qik",]
     return assign_array(names,
                         CHAR_ARRAYS[balance][ic],
                         CHAR_ARRAYS[balance]["prio"],
                         int)
+
+def get_abilities_from_array(primary_region: str = "default",
+                             secondary_region: str = "default",
+                             all_skills=False) -> tuple[dict, dict]:
+    prios, area_prios = gen_ability_prio(primary_region,
+                                         secondary_region,
+                                         all_skills)
+    prios = add_req_to_prio(prios, MAGE_REQUIRED_STATS)
+    ab_array = select_array(ABILITY_ARRAYS, ABILITY_ARRAYS_PRIO)
+    abilities = assign_array_prio_dict(prios,
+                                       ab_array,
+                                       Ability,
+                                       req = MAGE_REQUIRED_STATS)
+    prios = perturb_prios(prios)
+    return abilities, prios, area_prios
+
+# for now this is written to be run when prios only contains abilitites
+# and then form and technique and form prios are added separately
+# but running this on technique and form is fine too
+def perturb_prios(prios: dict) -> dict:
+    # perturb prios for abilities
+    # otherwise they are same when selecting as when leveling and only
+    # based on fixed values in areas * area prioritization
+    for key, val in prios.items():
+        r = rng.random()
+        if  r > 0.8:
+            prios[key] = val*2
+        elif r > 0.6:
+            prios[key] = val*1.3
+        elif r < 0.4:
+            prios[key] = val*0.4
+        elif r < 0.2:
+            prios[key] = val*0.3
+        # 0.4 < r < 0.6 remains unchanged
+    return prios
+
+def get_techniques_from_array(magic_prio_factor = 10) -> dict:
+    te = ["Cr","In","Mu","Pe","Re",]
+    te_array = select_array(TECH_ARRAYS, TECH_ARRAYS_PRIO)
+    techniques = assign_array(te, te_array, None, Art)
+    prios = set_technique_prios(techniques, magic_prio_factor=magic_prio_factor)
+    return techniques, prios
+
+def set_technique_prios(techniques: dict,
+                        prios: dict = {},
+                        magic_prio_factor: float = 10) -> dict:
+    for key, stat in techniques.items():
+        if rng.random() > 0.8:
+            prios[key] = 4*magic_prio_factor
+        else:
+            prios[key] = 0.5*magic_prio_factor
+    return prios
+
+def get_forms_from_array(magic_prio_factor = 10) -> dict:
+    fo = ["An","Aq","Au","Co","He","Ig","Im","Me","Te","Vi",]
+    fo_array = select_array(FORM_ARRAYS, FORM_ARRAYS_PRIO)
+    forms = assign_array(fo, fo_array, None, Art)
+    prios = set_form_prios(forms, magic_prio_factor=magic_prio_factor)
+    return forms, prios
+
+def set_form_prios(forms: dict,
+                        prios: dict = {},
+                        magic_prio_factor: float = 10) -> dict:
+    for key, stat in forms.items():
+        if rng.random() > 0.8:
+            prios[key] = 3*magic_prio_factor
+        else:
+            prios[key] = 0.2*magic_prio_factor
+    return prios
 
 def shift_abilities(ab_dict: dict,
                     shift_dict: dict,
@@ -191,12 +260,11 @@ def _assign_array_with_min_req(names: list,
                 req.pop(index)
     return sort_by_name_list(names, ret_dict)
 
-
 def select_arrays() -> tuple[list, list, list]:
-    ab_setting = select_array(ABILITY_ARRAYS, ABILITY_ARRAYS_PRIO)
-    te_setting = select_array(TECH_ARRAYS, TECH_ARRAYS_PRIO)
-    fo_setting = select_array(FORM_ARRAYS, FORM_ARRAYS_PRIO)
-    return ab_setting, te_setting, fo_setting
+    ab_array = select_array(ABILITY_ARRAYS, ABILITY_ARRAYS_PRIO)
+    te_array = select_array(TECH_ARRAYS, TECH_ARRAYS_PRIO)
+    fo_array = select_array(FORM_ARRAYS, FORM_ARRAYS_PRIO)
+    return ab_array, te_array, fo_array
 
 def select_array(array, prio_dict) -> list:
     names = list(array.keys())
@@ -207,8 +275,45 @@ def select_array(array, prio_dict) -> list:
                             1,
                             replace=False,
                             p=np.array(prio)/sum(prio))
-    return array[setting[0]]
+    return copy.deepcopy(array[setting[0]])
 
+def gen_mage_values() -> dict:
+    characteristics = get_characteristics_from_array()
+    abilities, ab_prios, area_prios = get_abilities_from_array()
+    techniques, te_prios = get_techniques_from_array()
+    forms, fo_prios = get_forms_from_array()
+    ret = {"characteristics": characteristics,
+           "abilities": abilities,
+           "techniques": techniques,
+           "forms": forms,
+           "area_prios": area_prios,
+           "ab_prios": ab_prios,
+           "te_prios": te_prios,
+           "fo_prios": fo_prios,
+           }
+    return ret
+
+def create_mage_from_generated_values(name: str,
+                                      values: dict,
+                                      char_input_year: int = 1220,
+                                      char_input_age: int = 25,
+                                      rel_prio_weight: float = 1,
+                                      budget: int = 30,
+                                      ) -> Character:
+    stats = values["abilities"] | values["techniques"] | values["forms"]
+    characteristics = values["characteristics"]
+    prios = values["ab_prios"] | values["te_prios"] | values["fo_prios"]
+    return Character(name,
+                    char_input_year,
+                    char_input_age,
+                    stats,
+                    prios,
+                    characteristics,
+                    rng,
+                    rel_prio_weight,
+                    budget = budget,
+                    softcapped_stats=SOFTCAPPED_STATS
+                    )
 
 # generates standard age 25, just out of gauntlet mages from mostly fixed arrays
 # of stats
@@ -254,52 +359,6 @@ def gen_from_stats_array(template: str,
             else:
                 prios[key] = 0.2
 
-    if template == "Mage":
-        characteristics = get_characteristics_array(balance="uneven", ic=2)
-        # set overall priorities first
-
-        # assign key stats and remove from array and names to do
-
-        # set ability priorities
-        prios, area_prios = gen_ability_prio(secondary_region="Africa")
-        ab_array, te_array, fo_array = select_arrays()
-
-        prios = add_req_to_prio(prios, MAGE_REQUIRED_STATS)
-        abilities = assign_array_prio_dict(prios,
-                                           ab_array,
-                                           Ability,
-                                           req = MAGE_REQUIRED_STATS)
-        techniques = assign_array(te, te_array, None, Art)
-        forms = assign_array(fo, fo_array, None, Art)
-
-        # perturb prios for abilities
-        # otherwise they are same when selecting as when leveling and only
-        # based on fixed values in areas * area prioritization
-        for key, val in prios.items():
-            r = rng.random()
-            if  r > 0.8:
-                prios[key] = val*2
-            elif r > 0.6:
-                prios[key] = val*1.3
-            elif r < 0.4:
-                prios[key] = val*0.4
-            elif r < 0.2:
-                prios[key] = val*0.3
-            # 0.4 < r < 0.6 remains unchanged
-
-        magic_prio_factor = area_prios["Magic"]*4 # TODO tune
-        # TODO handle removing/supressing "capped" stats
-        for key, stat in techniques.items():
-            if rng.random() > 0.8:
-                prios[key] = 4*magic_prio_factor
-            else:
-                prios[key] = 0.5*magic_prio_factor
-        for key, stat in forms.items():
-            if rng.random() > 0.8:
-                prios[key] = 3*magic_prio_factor
-            else:
-                prios[key] = 0.2*magic_prio_factor
-
     stats = abilities | techniques | forms
     return Character(name,
                         char_input_year,
@@ -335,14 +394,14 @@ def example_use():
     print(testa)
 
     for i in range(10):
-        print(get_characteristics_array(balance="uneven", ic=1))
+        print(get_characteristics_from_array(balance="uneven", ic=1))
 
     print()
-    examplo = gen_from_stats_array("Mage",
-                                   "Examplo de Magicus",
-                                   rel_prio_weight=0.5,
-                                   budget=35,
-                                   )
+    values = gen_mage_values()
+    examplo = create_mage_from_generated_values("Examplo de Magicus",
+                                                values,
+                                                rel_prio_weight=0.5,
+                                                budget=35)
     print(examplo)
     examplo.add_years(20)
     print(examplo)
