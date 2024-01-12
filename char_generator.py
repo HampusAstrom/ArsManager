@@ -31,7 +31,19 @@ def get_template(name: str) -> tuple[list, list, list]:
         raise Exception(f"There is no template named {name}") 
 
 # designed for mages, at least change prio for other characters
-def get_characteristics_from_array(balance: str = "default", ic: int = 1):
+def get_characteristics_from_array(balance: str = None, ic: int = None):
+    if balance is None:
+        names = list(CHAR_ARRAYS_PRIO.keys())
+        prio = list(CHAR_ARRAYS_PRIO.values())
+        balance = str(rng.choice(names,
+                             1,
+                             p=np.array(prio)/sum(prio))[0])
+    if ic is None:
+        names = list(IC_PRIO.keys())
+        prio = list(IC_PRIO.values())
+        ic = int(rng.choice(names,
+                        1,
+                        p=np.array(prio)/sum(prio))[0])
     names = ["Int", "Per", "Str", "Sta", "Pre", "Com", "Dex", "Qik",]
     return assign_array(names,
                         CHAR_ARRAYS[balance][ic],
