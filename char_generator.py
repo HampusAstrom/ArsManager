@@ -125,7 +125,6 @@ def gen_ability_prio(primary_region: str = "default",
     to_assign_array = [5, 2, 1, 1, 0.5, 0.2, 0.1, 0, 0, 0, 0, 0, 0, 0]
     area_prios = assign_array_prio_dict(SKILL_AREAS, to_assign_array, float, area=True)
 
-    print(area_prios)
     # assemble master ability prio dict
     ability_prios = defaultdict(float)
 

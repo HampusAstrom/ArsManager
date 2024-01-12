@@ -4,6 +4,7 @@ from tkinter import ttk, filedialog
 import json
 from typing import List
 from character import Character, Ability, Art
+from character import dict2string as d2s
 import char_generator as ch
 from functools import partial
 
@@ -239,40 +240,51 @@ class ArsManager:
 
         # Label and Entry for the user to input the character name
         name_label = tk.Label(popup, text="Enter Character Name:")
-        name_label.pack(pady=10)
+        name_label.grid(column=0, row=0, sticky=tk.NW,)
 
-        name_entry = tk.Entry(popup)
-        name_entry.pack(pady=10)
+        name_entry = tk.Entry(popup, width=50)
+        name_entry.grid(column=1, row=0, sticky=tk.NW,)
 
         # Dropdown menu for character type
         # type_label = tk.Label(popup, text="Select Character Type:")
         # type_label.pack(pady=10)
 
-        # type_options = ["Mage", "Warrior", "Rogue"]  # Customize based on your character types
+        # type_options = ["Mage", "Companion", "Grog"]  # Customize based on your character types
         # type_var = tk.StringVar(value=type_options[0])
 
         # type_menu = tk.OptionMenu(popup, type_var, *type_options)
         # type_menu.pack(pady=10)
 
         # Labels to display the generated stats
-        characteristics_label = tk.Label(popup, text="Characteristics:")
-        characteristics_label.pack(pady=10)
+        characteristics_label = tk.Label(popup,
+                                         text="Characteristics:",
+                                         justify=tk.LEFT)
+        characteristics_label.grid(column=1, row=1, sticky=tk.NW,)
 
-        abilities_label = tk.Label(popup, text="Abilities:")
-        abilities_label.pack(pady=10)
+        abilities_label = tk.Label(popup,
+                                   text="Abilities:",
+                                   wraplength=400,
+                                   height=14,
+                                   justify=tk.LEFT)
+        abilities_label.grid(column=1, row=2, sticky=tk.NW,)
 
-        techniques_label = tk.Label(popup, text="Techniques:")
-        techniques_label.pack(pady=10)
+        techniques_label = tk.Label(popup,
+                                    text="Techniques:",
+                                    justify=tk.LEFT)
+        techniques_label.grid(column=1, row=3, sticky=tk.NW,)
 
-        forms_label = tk.Label(popup, text="Forms:")
-        forms_label.pack(pady=10)
+        forms_label = tk.Label(popup,
+                               text="Forms:",
+                               justify=tk.LEFT)
+        forms_label.grid(column=1, row=4, sticky=tk.NW,)
 
         values = ch.gen_mage_values()
         # Update the displayed values for characteristics, abilities, etc.
-        characteristics_label.config(text=f"Characteristics: {values['characteristics']}")
-        abilities_label.config(text=f"Abilities: {values['abilities']}")
-        techniques_label.config(text=f"Techniques: {values['techniques']}")
-        forms_label.config(text=f"Forms: {values['forms']}")
+        characteristics_label.config(text=f"Characteristics:\n"
+                                     f"{d2s(values['characteristics'],sort=False)}")
+        abilities_label.config(text=f"Abilities:\n{d2s(values['abilities'])}")
+        techniques_label.config(text=f"Techniques:\n{d2s(values['techniques'])}")
+        forms_label.config(text=f"Forms:\n{d2s(values['forms'])}")
 
         # Function to generate random character stats
         def generate_random_stats(values):
@@ -283,57 +295,59 @@ class ArsManager:
             values['forms'], values['fo_prios'] = ch.get_forms_from_array()
 
             # Update the displayed values for characteristics, abilities, etc.
-            characteristics_label.config(text=f"Characteristics: {values['characteristics']}")
-            abilities_label.config(text=f"Abilities: {values['abilities']}")
-            techniques_label.config(text=f"Techniques: {values['techniques']}")
-            forms_label.config(text=f"Forms: {values['forms']}")
+            characteristics_label.config(text=f"Characteristics:\n"
+                                     f"{d2s(values['characteristics'],sort=False)}")
+            abilities_label.config(text=f"Abilities:\n{d2s(values['abilities'])}")
+            techniques_label.config(text=f"Techniques:\n{d2s(values['techniques'])}")
+            forms_label.config(text=f"Forms:\n{d2s(values['forms'])}")
 
         def gen_characteristics(values):
             values['characteristics'] = ch.get_characteristics_from_array()
-            characteristics_label.config(text=f"Characteristics: {values['characteristics']}")
+            characteristics_label.config(text=f"Characteristics:\n"
+                                     f"{d2s(values['characteristics'],sort=False)}")
 
         def gen_abilities(values):
             values['abilities'], values['ab_prios'], values['area_prios'] = ch.get_abilities_from_array()
-            abilities_label.config(text=f"Abilities: {values['abilities']}")
+            abilities_label.config(text=f"Abilities:\n{d2s(values['abilities'])}")
 
         def gen_techniques(values):
             values['techniques'], values['te_prios'] = ch.get_techniques_from_array()
-            techniques_label.config(text=f"Techniques: {values['techniques']}")
+            techniques_label.config(text=f"Techniques:\n{d2s(values['techniques'])}")
 
         def gen_forms(values):
             values['forms'], values['fo_prios'] = ch.get_forms_from_array()
-            forms_label.config(text=f"Forms: {values['forms']}")
+            forms_label.config(text=f"Forms:\n{d2s(values['forms'])}")
 
         # Button to generate random character stats
-        generate_button = ttk.Button(popup, text="Generate Random Stats",
+        generate_button = ttk.Button(popup, text="Re-roll all Stats",
                                      command=partial(generate_random_stats,
                                                      values))
-        generate_button.pack(pady=10)
+        generate_button.grid(column=0, row=5)
 
         # Buttons to regenerate each section
         gen_characteristics_b = ttk.Button(popup,
-                                           text="Regenerate Characteristics",
+                                           text="Re-roll Characteristics",
                                            command=partial(gen_characteristics,
                                                            values))
-        gen_characteristics_b.pack(pady=5)
+        gen_characteristics_b.grid(column=0, row=1)
 
         gen_abilities_b = ttk.Button(popup,
-                                     text="Regenerate Abilities",
+                                     text="Re-roll Abilities",
                                      command=partial(gen_abilities,
                                                      values))
-        gen_abilities_b.pack(pady=5)
+        gen_abilities_b.grid(column=0, row=2)
 
         gen_techniques_b = ttk.Button(popup,
-                                      text="Regenerate Techniques",
+                                      text="Re-roll Techniques",
                                       command=partial(gen_techniques,
                                                       values))
-        gen_techniques_b.pack(pady=5)
+        gen_techniques_b.grid(column=0, row=3)
 
         gen_forms_b = ttk.Button(popup,
-                                 text="Regenerate Forms",
+                                 text="Re-roll Forms",
                                  command=partial(gen_forms,
                                                  values))
-        gen_forms_b.pack(pady=5)
+        gen_forms_b.grid(column=0, row=4)
 
         def save_and_close_popup(self, name, values):
             if not name or name in self.setting.characters:
@@ -350,7 +364,7 @@ class ArsManager:
                                  command=lambda:
                                  save_and_close_popup(self, name_entry.get(),
                                                       values))
-        save_button.pack(pady=10)
+        save_button.grid(column=1, row=5)
 
         # Run the Tkinter main loop for the popup window
         popup.mainloop()

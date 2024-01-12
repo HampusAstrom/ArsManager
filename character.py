@@ -4,12 +4,15 @@ import itertools
 import json
 import importlib
 
-def dict2string(dct, sort=True) -> str:
+def dict2string(dct, sort=True, lb=False) -> str:
     if sort:
         dct = dict(sorted(dct.items()))
     s = ""
     for key, val in dct.items():
-        s += f"{key}: {val} "
+        if lb:
+            s += f"{key}: {val}\n"
+        else:
+            s += f"{key}: {val} "
     return s
 
 # only tracks values of the ability, assume that the name will be tracked when 
