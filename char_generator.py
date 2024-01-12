@@ -7,6 +7,29 @@ import copy
 # initiate default rng
 rng = np.random.default_rng()
 
+def abil_order_split(abil_dict: dict,
+                     order_split: dict = DEFAULT_ABIL_ORDERING,
+                     sort = True):
+    order_split = copy.deepcopy(order_split)
+    max_name_length = 22 # override with minimum for now
+    for key in abil_dict.keys():
+        if len(key) > max_name_length:
+            max_name_length = len(key)
+
+    ret = {}
+    found = 0
+    for title, area in order_split.items():
+        area = list(sorted(area))
+        ret[title] = {"String": "", "Dict list": []}
+        for ability in area:
+            if ability in abil_dict:
+                found += 1
+                ret[title]["String"] += f"{ability:<{max_name_length+3}} {abil_dict[ability]}\n"
+                ret[title]["Dict list"].append((ability, abil_dict[ability]))
+    if found < len(abil_dict): # TODO replace with adding to an "other" category?
+        print("There are abilities that where not found, to display!")
+    return ret
+
 def sort_by_name_list(names, dct):
     assert len(names) == len(dct)
     assert all(name in names for name in dct.keys())
@@ -409,6 +432,12 @@ def example_use():
 
     print()
     values = gen_mage_values()
+    abil_vis = abil_order_split(values["abilities"])
+    for area, val in abil_vis.items():
+        print(area)
+        print(val["String"])
+        print()
+
     examplo = create_mage_from_generated_values("Examplo de Magicus",
                                                 values,
                                                 rel_prio_weight=0.5,

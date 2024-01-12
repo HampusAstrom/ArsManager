@@ -197,7 +197,7 @@ CRAFTS = {"Craft 1": 5,
 PERFORMANCE = {"Music": 5, # might just be music or atheletics, remove one if needed
                "Athletics": 2,
                "Carouse": 0.5,
-               "Concentation": 0.3,
+               "Concentration": 0.3,
                "Folk Ken": 0.5,
                }
 
@@ -215,6 +215,7 @@ RELIGION = {"Theology": 5,
 
 GOVERNANCE = {"Artes Liberales": 3,
               "Civil and Canon Law": 5,
+              "Code of Hermes": 1,
               "Philosophiae": 1,
               "Latin": 0.5, # remove Latin, Greek or Arabic depening on region
               "(Organization) Lore 1": 3,
@@ -251,7 +252,7 @@ SUPERNATURAL = {"Animal Ken": 1,
                 "Magic Sensitivity": 1,
                 "Premonitions": 1,
                 "Second Sight": 1,
-                "Sense Holiness and Unholiness": 1,
+                "Sense Holy and Unholy": 1,
                 "Shapeshifter": 1,
                 "Wilderness Sense": 1,
                 }
@@ -378,3 +379,161 @@ MAGE_REQUIRED_STATS = {"Native Language": 5,
                        "Artes Liberales": 1,
                        "Parma Magica": 1,
                        }
+
+# order skill in tyoe sections and alphabetically within them
+# make a copy of this in the setting where we also add specified and
+# custom skills, like specific languages, lores and so
+# first skills will be most visible, order important and common first (after arts)
+ORD_CORE_MAGIC = ["Concentration",
+                  "Finesse",
+                  "Magic Theory",
+                  "Parma Magica",
+                  "Penetration",]
+
+ORD_CORE_ACA = ["Artes Liberales",
+                "Philosophiae",
+                "Teaching",]
+
+ORD_SOCIAL = ["Bargain",
+              "Carouse",
+              "Charm",
+              "Etiquette",
+              "Folk Ken",
+              "Guile",
+              "Intrigue",
+              "Leadership",]
+
+ORD_ADVENTURE = ["Animal Handling",
+                 "Athletics",
+                 "Awareness",
+                 "Hunt",
+                 "Legerdemain",
+                 "Ride",
+                 "Stealth",
+                 "Survival",
+                 "Swim",
+                 ]
+
+ORD_MARTIAL = ["Brawl",
+               "Bows",
+               "Great Weapon",
+               "Single Weapon",
+               "Thrown Weapon",]
+
+ORD_LANG = ["(Dead Language)",
+            "Arabic",
+            "Classic Greek",
+            "Foreign Language 1",
+            "Foreign Language 2",
+            "Latin",
+            "Native Language",
+            ]
+
+ORD_MED = ["Chirurgy",
+           "Medicine",]
+
+ORD_ART_N_CRAFT = ["Craft 1",
+                   "Craft 2",
+                   "Craft 3",
+                   "Music",]
+
+ORD_LAW_N_REL = ["Civil and Canon Law",
+                 "Code of Hermes",
+                 "Common Law",
+                 "Islamic Law",
+                 'Orthodox Church Lore',
+                 'Sunni Lore',
+                 "Theology",]
+
+ORD_MAGIC_LORES = ["Dominion Lore",
+                   "Faerie Lore",
+                   "Infernal Lore",
+                   "Magic Lore",]
+
+ORD_AREA_LORES = ["Area Lore 1",
+                  "Area Lore 2",
+                  "Area Lore 3",]
+
+ORD_ORG_LORES = ["Covenant Lore",
+                 "Church Lore",
+                 "Guild Lore",
+                 "House Lore",
+                 "Order of Hermes Lore",
+                 "(Organization) Lore 1",
+                 "(Organization) Lore 2",]
+
+ORD_PROF = ["Profession (Type)",
+            "Profession Scribe",
+            "Profession Sailor",]
+
+ORD_SUPER = SUPABILITIES
+
+DEFAULT_ABIL_ORDERING = {"Core Magic": ORD_CORE_MAGIC,
+                         "Core Academic": ORD_CORE_ACA,
+                         "Social": ORD_SOCIAL,
+                         "Adventure": ORD_ADVENTURE,
+                         "Martial": ORD_MARTIAL,
+                         "Languages": ORD_LANG,
+                         "Medicine": ORD_MED,
+                         "Arts and Crafting": ORD_ART_N_CRAFT,
+                         "Law and Religion": ORD_LAW_N_REL,
+                         "Magic Lores": ORD_MAGIC_LORES,
+                         "Area Lores": ORD_AREA_LORES,
+                         "Org. Lores": ORD_ORG_LORES,
+                         "Professions": ORD_PROF,
+                         "Supernatural": ORD_SUPER,
+                         }
+
+# just used to verify coherence in lists
+if __name__ == '__main__':
+    import copy
+    all_default_abiltites = copy.deepcopy(GENABILITIES + ACAABILITIES + ARCABILITIES + MARABILITIES +SUPABILITIES)
+
+    abilities_in_ordering = []
+    for _, area in DEFAULT_ABIL_ORDERING.items():
+        for abil in area:
+            if abil in abilities_in_ordering:
+                print(f"{abil} is added twice to ordering!")
+            else:
+                abilities_in_ordering.append(abil)
+
+    abilities_in_skill_areas = []
+    for _, tup in SKILL_AREAS.items():
+        area = tup[0]
+        for abil in area:
+            if abil not in abilities_in_skill_areas:
+                abilities_in_skill_areas.append(abil)
+    for _, val in GREEK_SHIFT.items():
+        for tup in val:
+            abil = tup[0]
+            if abil not in abilities_in_skill_areas:
+                    abilities_in_skill_areas.append(abil)
+    for _, val in ARABIC_SHIFT.items():
+        for tup in val:
+            abil = tup[0]
+            if abil not in abilities_in_skill_areas:
+                    abilities_in_skill_areas.append(abil)
+    for _, val in ENGLISH_SHIFT.items():
+        for tup in val:
+            abil = tup[0]
+            if abil not in abilities_in_skill_areas:
+                    abilities_in_skill_areas.append(abil)
+
+    diff_def_v_order = list(set(all_default_abiltites).difference(abilities_in_ordering))
+    diff_order_v_def = list(set(abilities_in_ordering).difference(all_default_abiltites))
+    if diff_def_v_order:
+        print(f"{diff_def_v_order} are in default abilities but not ordering")
+    if diff_order_v_def:
+        print(f"{diff_order_v_def} are in ordering but not default abilities")
+
+    diff_area_v_order = list(set(abilities_in_skill_areas).difference(abilities_in_ordering))
+    diff_order_v_area = list(set(abilities_in_ordering).difference(abilities_in_skill_areas))
+    if diff_area_v_order:
+        print(f"{diff_area_v_order} are in skill areas but not ordering")
+    if diff_order_v_area:
+        print(f"{diff_order_v_area} are in ordering but not skill areas")
+
+    # these tests currently expects the following output:
+    # ['Sunni Lore', 'Church Lore', 'Profession Scribe', 'Profession Sailor',
+    # 'Orthodox Church Lore', 'Guild Lore', 'House Lore', 'Covenant Lore']
+    # are in ordering but not default abilities
