@@ -121,7 +121,7 @@ class ArsManager:
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="New Setting", command=self.new_setting)
-        file_menu.add_command(label="Save Setting", command=self.save_setting)
+        file_menu.add_command(label="Save Setting", command=self.ask_save_setting)
         file_menu.add_command(label="Load Setting", command=self.load_setting)
         file_menu.add_command(label="New Character", command=self.create_character_popup)
         file_menu.add_separator()
@@ -136,6 +136,13 @@ class ArsManager:
             self.tree.column(col, width=100, anchor="center")
 
         self.tree.pack(expand=True, fill="both")
+
+    def save_setting(self):
+        if self.setting.save_name:
+                    with open(self.setting.save_name, 'w') as file:
+                        # Serialize the setting using the __json__ method
+                        serialized_setting = self.setting.__json__()
+                        json.dump(serialized_setting, file, indent=2)
 
     def new_setting(self):
         # Create a new Toplevel window (popup)
@@ -167,11 +174,7 @@ class ArsManager:
                 # Update the current setting
                 self.setting = new_setting
 
-                if file_path:
-                    with open(file_path, 'w') as file:
-                        # Serialize the setting using the __json__ method
-                        serialized_setting = self.setting.__json__()
-                        json.dump(serialized_setting, file, indent=2)
+                self.save_setting()
 
                 # Close the popup
                 popup.destroy()
@@ -188,16 +191,13 @@ class ArsManager:
         # Run the Tkinter main loop for the popup window
         popup.mainloop()
 
-    def save_setting(self):
+    def ask_save_setting(self):
         file_path = filedialog.asksaveasfilename(
             defaultextension=".json", filetypes=[("JSON files", "*.json")]
         )
+        self.setting.save_name = file_path
 
-        if file_path:
-            with open(file_path, 'w') as file:
-                # Serialize the setting using the __json__ method
-                serialized_setting = self.setting.__json__()
-                json.dump(serialized_setting, file, indent=2)
+        self.save_setting()
 
     def load_setting(self):
         file_path = filedialog.askopenfilename(
@@ -232,6 +232,8 @@ class ArsManager:
                                                     budget=35)
         self.setting.add_character(new_char)
         self.update_table()
+        # we autosave after each character has been created
+        self.save_setting()
 
     def create_character_popup(self):
         # Create a new Toplevel window (popup) for character creation
