@@ -97,6 +97,16 @@ class Setting:
         else:
             return None
 
+    def add_years(self, years: int):
+        self.current_year += years
+        for char in self.characters.values():
+            char.set_to_year(self.current_year)
+
+    def set_year(self, year: int):
+        self.current_year = year
+        for char in self.characters.values():
+            char.set_to_year(year)
+
     def characters2csv_headers(self) -> list:
         headers = [str(self.current_year), "Age"]
         headers += lists_and_data.CHARACTERISTICS
@@ -105,22 +115,6 @@ class Setting:
         for _, area in self.ability_ordering.items():
             headers += area
         return headers
-
-    def export_characters(self):
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv",
-                                                 filetypes=[("CSV files", "*.csv")],
-                                                 title="Export location")
-        if file_path:
-            with open(file_path, "w", newline="") as csvfile:
-                csvwriter = csv.writer(csvfile)
-                headers = self.characters2csv_headers()
-                csvwriter.writerow(headers)
-                # first field should be name, we just hijacked it for current year
-                headers[0] = "Name"
-                dictwriter = csv.DictWriter(csvfile, fieldnames=headers)
-                chars = dict(sorted(self.characters.items()))
-                for char in chars.values():
-                    dictwriter.writerow(char.to_dict())
 
 class SortableTable(ttk.Treeview):
     def __init__(self, parent, columns, data, *args, **kwargs):
@@ -150,33 +144,46 @@ class ArsManager:
         self.setting = Setting(name="Default Setting",
                                save_name="default_setting")
 
-        self.create_file_menu(initiated=False)
+        self.menubar = tk.Menu(self.root)
+        self.root.config(menu=self.menubar)
+        self.create_file_menu()
+        self.create_setting_menu()
+        self.enable_setting_menus(initiated=False)
         self.create_table()
 
-    def create_file_menu(self, initiated: bool=True):
-        menubar = tk.Menu(self.root)
-        self.root.config(menu=menubar)
+    def create_setting_menu(self):
+        setting_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="Setting", menu=setting_menu)
+        setting_menu.add_command(label="Set Year", command=self.set_year_popup)
+        setting_menu.add_command(label="Add Years", command=self.add_years_popup)
+
+    def create_file_menu(self):
+        file_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="File", menu=file_menu)
+        self.file_menu = file_menu
+        file_menu.add_command(label="New Setting", command=self.new_setting)
+        file_menu.add_command(label="Save Setting", command=self.ask_save_setting)
+        file_menu.add_command(label="Export Setting",
+                              command=self.export_characters)
+        file_menu.add_command(label="Load Setting", command=self.load_setting)
+        file_menu.add_command(label="New Character", command=self.create_character_popup)
+
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.root.destroy)
+
+    def enable_setting_menus(self, initiated: bool=True):
         if initiated:
             state=tk.NORMAL
         else:
             state=tk.DISABLED
-
-        file_menu = tk.Menu(menubar, tearoff=0)
-        menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="New Setting", command=self.new_setting)
-        file_menu.add_command(label="Save Setting", command=self.ask_save_setting)
+        file_menu = self.file_menu
         file_menu.entryconfigure("Save Setting", state=state)
-        file_menu.add_command(label="Export Setting",
-                              command=self.setting.export_characters)
         file_menu.entryconfigure("Export Setting", state=state)
-        file_menu.add_command(label="Load Setting", command=self.load_setting)
-        file_menu.add_command(label="New Character", command=self.create_character_popup)
         file_menu.entryconfigure("New Character", state=state)
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.root.destroy)
+        self.menubar.entryconfigure("Setting", state=state)
 
     def create_table(self):
-        columns = ("Name", "Age", "Stats", "Characteristics")
+        columns = ("Name", "Age", "Characteristics")
         self.tree = SortableTable(self.root, columns, [], show="headings")
 
         for col in columns:
@@ -221,7 +228,6 @@ class ArsManager:
 
                 # Update the current setting
                 self.setting = new_setting
-
                 self.save_setting()
 
                 # Close the popup
@@ -231,7 +237,7 @@ class ArsManager:
                 self.update_table()
 
                 # open up options
-                self.create_file_menu()
+                self.enable_setting_menus()
 
         # Save Setting button
         save_button = ttk.Button(popup,
@@ -261,18 +267,107 @@ class ArsManager:
                 serialized_setting = json.load(file)
                 self.setting = Setting.from_json(serialized_setting)
                 self.update_table()
-                self.create_file_menu()
+                self.enable_setting_menus()
 
     def update_table(self):
         # Clear the existing items in the table
         self.tree.delete(*self.tree.get_children())
 
         # Populate the table with character data
+        # TODO fix that this sends wrong info, let sorter sort it out instead
         data = [
             (char.name, char.current_age, char.stats, char.characteristics)
             for char in self.setting.characters.values()
         ]
         self.tree.populate_table(data)
+
+    def export_characters(self):
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv",
+                                                 filetypes=[("CSV files", "*.csv")],
+                                                 title="Export location")
+        if file_path:
+            with open(file_path, "w", newline="") as csvfile:
+                csvwriter = csv.writer(csvfile)
+                headers = self.setting.characters2csv_headers()
+                csvwriter.writerow(headers)
+                # first field should be name, we just hijacked it for current year
+                headers[0] = "Name"
+                dictwriter = csv.DictWriter(csvfile, fieldnames=headers)
+                chars = dict(sorted(self.setting.characters.items()))
+                for char in chars.values():
+                    dictwriter.writerow(char.to_dict())
+
+    def set_year_popup(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Set year")
+
+        earliest = -np.inf
+        for char in self.setting.characters.values():
+            if char.char_input_year > earliest:
+                earliest = char.char_input_year
+
+        label_text = f"Current year is {self.setting.current_year}.\n"
+        label_text += f"The earliest year you can select is {earliest}.\n"
+        label_text += "What year do you want to set it to?"
+        year_label = tk.Label(popup,
+                              text=label_text)
+        year_label.grid(column=0, row=0, sticky=tk.NW, padx=10, pady=10)
+
+        set_years_entry = tk.Entry(popup, width=20)
+        set_years_entry.grid(column=1,
+                             row=0,
+                             sticky=tk.NW,
+                             padx=10,
+                             pady=10)
+
+        def set_year(year: str):
+            year = int(year)
+            if year < earliest:
+                return
+            self.setting.set_year(year)
+            self.update_table()
+            self.save_setting()
+            popup.destroy()
+
+        add_b = ttk.Button(popup,text="Set year",
+                           command=lambda:
+                           set_year(set_years_entry.get()))
+        add_b.grid(column=0, row=1, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+
+    def add_years_popup(self):
+        popup = tk.Toplevel(self.root)
+        popup.title("Add years")
+
+        label_text = f"Current year is {self.setting.current_year}.\n"
+        label_text += "How many years to you want to add?"
+        year_label = tk.Label(popup,
+                              text=label_text)
+        year_label.grid(column=0, row=0, sticky=tk.NW, padx=10, pady=10)
+
+        add_years_entry = tk.Entry(popup, width=20)
+        add_years_entry.grid(column=1,
+                             row=0,
+                             sticky=tk.NW,
+                             padx=10,
+                             pady=10)
+
+        def add_years(years: str):
+            years = int(years)
+            if years < 1:
+                return
+            self.setting.add_years(years)
+            self.update_table()
+            self.save_setting()
+            popup.destroy()
+
+        add_b = ttk.Button(popup,text="Add years",
+                           command=lambda:
+                           add_years(add_years_entry.get()))
+        add_b.grid(column=0, row=1, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+
+        # Run the Tkinter main loop for the popup window
+        popup.mainloop()
+
 
     def create_new_character(self,
                              name,

@@ -42,7 +42,7 @@ class Ability:
         return float(self._value)
 
     def __json__(self):
-        return {"xp": self._tot_xp, "cls": str(self.__class__.__name__)}
+        return self._tot_xp
 
     @staticmethod
     def xp2val(xp: int) -> tuple[int, int]:
@@ -137,6 +137,7 @@ class Character:
         assert budget > 0
         assert chunk_mean > 0
         assert self.check_same_keys(stats, prios)
+        assert isinstance(current_year, (int,type(None)))
         self.name = name
         # groups: organized like groups in setting type as key names in values
         self.groups = groups
@@ -242,11 +243,13 @@ class Character:
                            - self.char_input_year \
                            + self.char_input_age
 
-    def get_arts_and_abilities(self) -> tuple[dict, dict]:
+    def get_arts_and_abilities(self, stats: dict = None) -> tuple[dict, dict]:
         abilities = {}
         arts = {}
+        if not stats:
+            stats = self.stats
         # assumes no other type of Abilities to separate
-        for key, val in self.stats.items():
+        for key, val in stats.items():
             if isinstance(val, Art):
                 arts[key] = val
             else:
@@ -287,6 +290,11 @@ class Character:
 
     def __json__(self):
         # Customize serialization for the Character class
+        abilities, arts = self.get_arts_and_abilities()
+        history = {}
+        for year, sts in self.history.items():
+            ab, ar = self.get_arts_and_abilities(sts)
+            history[year] = {"abilities": ab, "arts": ar}
         return {
             "name": self.name,
             "groups": self.groups,
@@ -294,7 +302,8 @@ class Character:
             "char_input_year": self.char_input_year,
             "char_input_age": self.char_input_age,
             "characteristics": self.characteristics,
-            "stats": self.stats,
+            "abilities": abilities,
+            "arts": arts,
             "prios": self.prios,
             # "rng": self.rng.bit_generator.state,
             "rel_prio_weight": self.rel_prio_weight,
@@ -304,21 +313,21 @@ class Character:
             "current_year": self._current_year,
             "softcapped_stats": self.softcapped_stats,
             "groups": self.groups,
-            "history": self.history,
+            "history": history,
         }
 
     @classmethod
-    def stats_from_json(cls, stats_data):
+    def stats_from_json(cls, stats_data, stat_cls):
         stats = {}
-        for name, info in stats_data.items():
-            FoundClass = getattr(importlib.import_module("character"), info["cls"])
-            stats[name] = FoundClass(xp = info["xp"], tot_xp = True)
+        for name, xp in stats_data.items():
+            stats[name] = stat_cls(xp = xp, tot_xp = True)
         return stats
 
     @classmethod
     def from_json(cls, serialized_data):
         # Customize deserialization for the Character class
-        stats = cls.stats_from_json(serialized_data["stats"])
+        stats = cls.stats_from_json(serialized_data["abilities"], Ability)
+        stats |= cls.stats_from_json(serialized_data["arts"], Art)
 
         char = cls(
             name=serialized_data["name"],
@@ -331,14 +340,17 @@ class Character:
             rel_art_xp_weight=serialized_data["rel_art_xp_weight"],
             budget=serialized_data["budget"],
             chunk_mean=serialized_data["chunk_mean"],
-            current_year=serialized_data["current_year"],
             softcapped_stats=serialized_data["softcapped_stats"],
             groups=serialized_data["groups"],
             char_info=serialized_data["char_info"],
         )
 
         for year, stats in serialized_data["history"].items():
-            char.history[int(year)] = cls.stats_from_json(serialized_data["stats"])
+            hstats = cls.stats_from_json(stats["abilities"], Ability)
+            hstats |= cls.stats_from_json(stats["arts"], Art)
+            char.history[int(year)] = hstats
+
+        char._current_year = int(serialized_data["current_year"])
 
         return char
 
