@@ -165,12 +165,15 @@ class ArsManager:
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="New Setting", command=self.new_setting)
         file_menu.add_command(label="Save Setting", command=self.ask_save_setting)
+        file_menu.entryconfigure("Save Setting", state=state)
+        file_menu.add_command(label="Export Setting",
+                              command=self.setting.export_characters)
+        file_menu.entryconfigure("Export Setting", state=state)
         file_menu.add_command(label="Load Setting", command=self.load_setting)
         file_menu.add_command(label="New Character", command=self.create_character_popup)
+        file_menu.entryconfigure("New Character", state=state)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.destroy)
-        file_menu.entryconfigure(1, state=state)
-        file_menu.entryconfigure(3, state=state)
 
     def create_table(self):
         columns = ("Name", "Age", "Stats", "Characteristics")
@@ -246,7 +249,6 @@ class ArsManager:
         self.setting.save_name = file_path
 
         self.save_setting()
-        self.setting.export_characters()
 
     def load_setting(self):
         file_path = filedialog.askopenfilename(
