@@ -27,7 +27,7 @@ def abil_order_split(abil_dict: dict,
                 ret[title]["String"] += f"{ability:<{max_name_length+3}} {abil_dict[ability]}\n"
                 ret[title]["Dict list"].append((ability, abil_dict[ability]))
     if found < len(abil_dict): # TODO replace with adding to an "other" category?
-        print("There are abilities that where not found, to display!")
+        print("There are abilities that where not found, they are not displayed!")
     return ret
 
 def sort_by_name_list(names, dct):

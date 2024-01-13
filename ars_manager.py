@@ -25,7 +25,7 @@ class Setting:
                  save_name: str,
                  characters: dict = {},
                  groups: dict = {},
-                 rng_state = None,
+                 rng = None,
                  ) -> None:
         self.name = name
         self.save_name = save_name
@@ -39,10 +39,8 @@ class Setting:
         self.groups = groups
         self.rng = np.random.default_rng()
         self.ability_ordering = copy.deepcopy(lists_and_data.DEFAULT_ABIL_ORDERING)
-        if rng_state:
-            self.rng.bit_generator.state = rng_state
-            for _, char in self.characters.items():
-                char.rng = self.rng
+        for _, char in self.characters.items():
+            char.rng = self.rng
 
     def __json__(self):
         # Customize serialization for the Character class
@@ -60,12 +58,14 @@ class Setting:
         chars = {}
         for _, char in serialized_data["characters"].items():
             chars[char["name"]] = Character.from_json(char)
+        rng = np.random.default_rng()
+        rng.bit_generator.state = serialized_data["rng"]
         return cls(
             name=serialized_data["name"],
             save_name=serialized_data["save_name"],
             characters=chars,
             groups=serialized_data["groups"],
-            rng_state=serialized_data["rng"],
+            rng=rng,
         )
 
     def add_character(self,
@@ -362,7 +362,6 @@ class ArsManager:
                                           "Supernatural"],
                                           abil_vis)
             abilities3_label.config(text=part3)
-
 
         values = cg.gen_mage_values()
         # Update the displayed values for characteristics, abilities, etc.

@@ -289,27 +289,51 @@ class Character:
             "characteristics": self.characteristics,
             "stats": self.stats,
             "prios": self.prios,
-            "rng": self.rng.bit_generator.state,
-            # ... (add other attributes you want to serialize)
+            # "rng": self.rng.bit_generator.state,
+            "rel_prio_weight": self.rel_prio_weight,
+            "rel_art_xp_weight": self.rel_art_xp_weight,
+            "budget": self.budget,
+            "chunk_mean": self.chunk_mean,
+            "current_year": self._current_year,
+            "softcapped_stats": self.softcapped_stats,
+            "groups": self.groups,
+            "history": self.history,
         }
+
+    @classmethod
+    def stats_from_json(cls, stats_data):
+        stats = {}
+        for name, info in stats_data.items():
+            FoundClass = getattr(importlib.import_module("character"), info["cls"])
+            stats[name] = FoundClass(xp = info["xp"], tot_xp = True)
+        return stats
 
     @classmethod
     def from_json(cls, serialized_data):
         # Customize deserialization for the Character class
-        stats = {}
-        for name, info in serialized_data["stats"].items():
-            FoundClass = getattr(importlib.import_module("character"), info["cls"])
-            stats[name] = FoundClass(xp = info["xp"], tot_xp = True)
+        stats = cls.stats_from_json(serialized_data["stats"])
 
-        return cls(
+        char = cls(
             name=serialized_data["name"],
             char_input_year=serialized_data["char_input_year"],
             char_input_age=serialized_data["char_input_age"],
             stats=stats,
             prios=serialized_data["prios"],
             characteristics=serialized_data["characteristics"],
-            # ... (add other attributes you want to deserialize)
+            rel_prio_weight=serialized_data["rel_prio_weight"],
+            rel_art_xp_weight=serialized_data["rel_art_xp_weight"],
+            budget=serialized_data["budget"],
+            chunk_mean=serialized_data["chunk_mean"],
+            current_year=serialized_data["current_year"],
+            softcapped_stats=serialized_data["softcapped_stats"],
+            groups=serialized_data["groups"],
+            char_info=serialized_data["char_info"],
         )
+
+        for year, stats in serialized_data["history"].items():
+            char.history[int(year)] = cls.stats_from_json(serialized_data["stats"])
+
+        return char
 
     # TODO add method for renaming ability (and fixing it through history)
 
