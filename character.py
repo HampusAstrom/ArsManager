@@ -278,6 +278,13 @@ class Character:
         s += f"Forms: {dict2string(form)}\n"
         return s
 
+    def to_dict(self):
+        ret = {"Name": self.name, "Age": self.current_age}
+        ret |= self.characteristics
+        for key, val in self.stats.items():
+            ret[key] = val.value
+        return ret
+
     def __json__(self):
         # Customize serialization for the Character class
         return {

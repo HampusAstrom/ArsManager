@@ -40,9 +40,9 @@ def sort_by_name_list(names, dct):
 
 def get_template(name: str) -> tuple[list, list, list]:
     # shared stats unless overwritten, non mages don't get the arts (tech and form)
-    characteristics = ["Int", "Per", "Str", "Sta", "Pre", "Com", "Dex", "Qik",]
-    tech = ["Cr","In","Mu","Pe","Re",]
-    form = ["An","Aq","Au","Co","He","Ig","Im","Me","Te","Vi",]
+    characteristics = CHARACTERISTICS
+    tech = TECHNIQUES
+    form = FORMS
     if name == "Certamen":
         characteristics = ["Int", "Per", "Sta", "Pre", "Qik",]
         abilities = ["Finesse", "Penetration", "Parma Magica", "Concentration"]
@@ -67,7 +67,7 @@ def get_characteristics_from_array(balance: str = None, ic: int = None):
         ic = int(rng.choice(names,
                         1,
                         p=np.array(prio)/sum(prio))[0])
-    names = ["Int", "Per", "Str", "Sta", "Pre", "Com", "Dex", "Qik",]
+    names = CHARACTERISTICS
     return assign_array(names,
                         CHAR_ARRAYS[balance][ic],
                         CHAR_ARRAYS[balance]["prio"],
@@ -109,7 +109,7 @@ def perturb_prios(prios: dict) -> dict:
     return prios
 
 def get_techniques_from_array(magic_prio_factor = 10) -> dict:
-    te = ["Cr","In","Mu","Pe","Re",]
+    te = TECHNIQUES
     te_array = select_array(TECH_ARRAYS, TECH_ARRAYS_PRIO)
     techniques = assign_array(te, te_array, None, Art)
     prios = set_technique_prios(techniques, magic_prio_factor=magic_prio_factor)
@@ -126,7 +126,7 @@ def set_technique_prios(techniques: dict,
     return prios
 
 def get_forms_from_array(magic_prio_factor = 10) -> dict:
-    fo = ["An","Aq","Au","Co","He","Ig","Im","Me","Te","Vi",]
+    fo = FORMS
     fo_array = select_array(FORM_ARRAYS, FORM_ARRAYS_PRIO)
     forms = assign_array(fo, fo_array, None, Art)
     prios = set_form_prios(forms, magic_prio_factor=magic_prio_factor)

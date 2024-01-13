@@ -1,3 +1,5 @@
+CHARACTERISTICS = ["Int", "Per", "Str", "Sta", "Pre", "Com", "Dex", "Qik",]
+
 GENABILITIES = ["Animal Handling",
                 "Area Lore 1",
                 "Area Lore 2",
@@ -64,9 +66,13 @@ SUPABILITIES = ["Animal Ken",
                 "Magic Sensitivity",
                 "Premonitions",
                 "Second Sight",
-                "Sense Holiness and Unholiness",
+                "Sense Holy and Unholy",
                 "Shapeshifter",
                 "Wilderness Sense",]
+
+TECHNIQUES = ["Cr","In","Mu","Pe","Re",]
+
+FORMS = ["An","Aq","Au","Co","He","Ig","Im","Me","Te","Vi",]
 
 MAGIC = {"Magic Theory": 20,
          "Latin": 2,

@@ -9,6 +9,7 @@ import char_generator as cg
 from functools import partial
 import copy
 import lists_and_data
+import csv
 
 def wrapped_default(self, obj):
     return getattr(obj.__class__, "__json__", wrapped_default.default)(obj)
@@ -26,7 +27,9 @@ class Setting:
                  characters: dict = {},
                  groups: dict = {},
                  rng = None,
+                 current_year: int = 1220,
                  ) -> None:
+        self.version = 0.1 # used to track how json save looks like and handle updates
         self.name = name
         self.save_name = save_name
         self.characters = characters # contains all setting characters
@@ -38,23 +41,30 @@ class Setting:
         # add a group to a character from this dict of options)
         self.groups = groups
         self.rng = np.random.default_rng()
+        self.current_year = current_year
         self.ability_ordering = copy.deepcopy(lists_and_data.DEFAULT_ABIL_ORDERING)
+        if rng is None:
+            self.rng = np.random.default_rng()
+        else:
+            self.rng = rng
         for _, char in self.characters.items():
             char.rng = self.rng
 
     def __json__(self):
         # Customize serialization for the Character class
         return {
+            "version": self.version,
             "name": self.name,
             "save_name": self.save_name,
             "characters": self.characters,
             "groups": self.groups,
             "rng": self.rng.bit_generator.state,
+            "current_year": self.current_year
         }
 
     @classmethod
     def from_json(cls, serialized_data):
-        # Customize deserialization for the Setting class
+        # if needed use serialized_data["version"] to do recovery behaviour
         chars = {}
         for _, char in serialized_data["characters"].items():
             chars[char["name"]] = Character.from_json(char)
@@ -66,6 +76,7 @@ class Setting:
             characters=chars,
             groups=serialized_data["groups"],
             rng=rng,
+            current_year=serialized_data["current_year"]
         )
 
     def add_character(self,
@@ -85,6 +96,31 @@ class Setting:
             return self.characters[name]
         else:
             return None
+
+    def characters2csv_headers(self) -> list:
+        headers = [str(self.current_year), "Age"]
+        headers += lists_and_data.CHARACTERISTICS
+        headers += lists_and_data.TECHNIQUES
+        headers += lists_and_data.FORMS
+        for _, area in self.ability_ordering.items():
+            headers += area
+        return headers
+
+    def export_characters(self):
+        file_path = filedialog.asksaveasfilename(defaultextension=".csv",
+                                                 filetypes=[("CSV files", "*.csv")],
+                                                 title="Export location")
+        if file_path:
+            with open(file_path, "w", newline="") as csvfile:
+                csvwriter = csv.writer(csvfile)
+                headers = self.characters2csv_headers()
+                csvwriter.writerow(headers)
+                # first field should be name, we just hijacked it for current year
+                headers[0] = "Name"
+                dictwriter = csv.DictWriter(csvfile, fieldnames=headers)
+                chars = dict(sorted(self.characters.items()))
+                for char in chars.values():
+                    dictwriter.writerow(char.to_dict())
 
 class SortableTable(ttk.Treeview):
     def __init__(self, parent, columns, data, *args, **kwargs):
@@ -114,12 +150,16 @@ class ArsManager:
         self.setting = Setting(name="Default Setting",
                                save_name="default_setting")
 
-        self.create_menu()
+        self.create_file_menu(initiated=False)
         self.create_table()
 
-    def create_menu(self):
+    def create_file_menu(self, initiated: bool=True):
         menubar = tk.Menu(self.root)
         self.root.config(menu=menubar)
+        if initiated:
+            state=tk.NORMAL
+        else:
+            state=tk.DISABLED
 
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
@@ -129,6 +169,8 @@ class ArsManager:
         file_menu.add_command(label="New Character", command=self.create_character_popup)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.destroy)
+        file_menu.entryconfigure(1, state=state)
+        file_menu.entryconfigure(3, state=state)
 
     def create_table(self):
         columns = ("Name", "Age", "Stats", "Characteristics")
@@ -185,6 +227,9 @@ class ArsManager:
                 # Update the table with the new setting
                 self.update_table()
 
+                # open up options
+                self.create_file_menu()
+
         # Save Setting button
         save_button = ttk.Button(popup,
                                  text="Select save location",
@@ -201,6 +246,7 @@ class ArsManager:
         self.setting.save_name = file_path
 
         self.save_setting()
+        self.setting.export_characters()
 
     def load_setting(self):
         file_path = filedialog.askopenfilename(
@@ -213,6 +259,7 @@ class ArsManager:
                 serialized_setting = json.load(file)
                 self.setting = Setting.from_json(serialized_setting)
                 self.update_table()
+                self.create_file_menu()
 
     def update_table(self):
         # Clear the existing items in the table
