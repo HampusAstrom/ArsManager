@@ -153,20 +153,44 @@ class ArsManager:
 
     def create_setting_menu(self):
         setting_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="Setting", menu=setting_menu)
-        setting_menu.add_command(label="Set Year", command=self.set_year_popup)
-        setting_menu.add_command(label="Add Years", command=self.add_years_popup)
+        self.menubar.add_cascade(label="Setting",
+                                 menu=setting_menu,
+                                 underline=0)
+        setting_menu.bind("<Alt-s>", lambda e:setting_menu.invoke(0))
+        setting_menu.add_command(label="Set Year",
+                                 command=self.set_year_popup,
+                                 underline=0)
+        setting_menu.bind("<Alt-s>", lambda e:self.set_year_popup)
+        setting_menu.add_command(label="Add Years",
+                                 command=self.add_years_popup,
+                                 underline=0)
+        setting_menu.bind("<Alt-a>", lambda e:self.add_years_popup)
 
     def create_file_menu(self):
         file_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="File", menu=file_menu)
+        self.menubar.add_cascade(label="File", menu=file_menu, underline=0)
         self.file_menu = file_menu
-        file_menu.add_command(label="New Setting", command=self.new_setting)
-        file_menu.add_command(label="Save Setting", command=self.ask_save_setting)
+        file_menu.bind("<Alt-f>", lambda e:file_menu.invoke(0))
+        file_menu.add_command(label="New Setting",
+                              command=self.new_setting,
+                              underline=0)
+        file_menu.bind("<Alt-n>", lambda e:self.new_setting)
+        file_menu.add_command(label="Save Setting",
+                              command=self.ask_save_setting,
+                               underline=0)
+        file_menu.bind("<Alt-s>", lambda e:self.ask_save_setting)
         file_menu.add_command(label="Export Setting",
-                              command=self.export_characters)
-        file_menu.add_command(label="Load Setting", command=self.load_setting)
-        file_menu.add_command(label="New Character", command=self.create_character_popup)
+                              command=self.export_characters,
+                               underline=0)
+        file_menu.bind("<Alt-e>", lambda e:self.export_characters)
+        file_menu.add_command(label="Load Setting",
+                              command=self.load_setting,
+                               underline=0)
+        file_menu.bind("<Alt-l>", lambda e:self.load_setting)
+        file_menu.add_command(label="New Character",
+                              command=self.create_character_popup,
+                               underline=4)
+        file_menu.bind("<Alt-c>", lambda e:self.create_character_popup)
 
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.root.destroy)
@@ -210,9 +234,10 @@ class ArsManager:
 
         entry = ttk.Entry(popup)
         entry.pack(pady=10)
+        entry.focus()
 
         # Callback function to handle the "Save Setting" button
-        def set_save_location():
+        def set_save_location(event = None):
             # Get the input setting name
             setting_name = entry.get()
 
@@ -244,6 +269,7 @@ class ArsManager:
                                  text="Select save location",
                                  command=set_save_location)
         save_button.pack(pady=10, padx=10)
+        popup.bind('<Return>', set_save_location)
 
         # Run the Tkinter main loop for the popup window
         popup.mainloop()
@@ -319,6 +345,7 @@ class ArsManager:
                              sticky=tk.NW,
                              padx=10,
                              pady=10)
+        set_years_entry.focus()
 
         def set_year(year: str):
             year = int(year)
@@ -333,6 +360,7 @@ class ArsManager:
                            command=lambda:
                            set_year(set_years_entry.get()))
         add_b.grid(column=0, row=1, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+        popup.bind('<Return>', lambda e:set_year(set_years_entry.get()))
 
     def add_years_popup(self):
         popup = tk.Toplevel(self.root)
@@ -350,6 +378,7 @@ class ArsManager:
                              sticky=tk.NW,
                              padx=10,
                              pady=10)
+        add_years_entry.focus()
 
         def add_years(years: str):
             years = int(years)
@@ -364,6 +393,7 @@ class ArsManager:
                            command=lambda:
                            add_years(add_years_entry.get()))
         add_b.grid(column=0, row=1, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+        popup.bind('<Return>', lambda e:add_years(add_years_entry.get()))
 
         # Run the Tkinter main loop for the popup window
         popup.mainloop()
@@ -397,7 +427,13 @@ class ArsManager:
         name_label.grid(column=0, row=0, sticky=tk.NW, padx=10, pady=10)
 
         name_entry = tk.Entry(popup, width=50)
-        name_entry.grid(column=1, row=0, sticky=tk.NW,columnspan=3, padx=10, pady=10)
+        name_entry.grid(column=1,
+                        row=0,
+                        sticky=tk.NW,
+                        columnspan=3,
+                        padx=10,
+                        pady=10)
+        name_entry.focus()
 
         # Dropdown menu for character type
         # type_label = tk.Label(popup, text="Select Character Type:")
@@ -551,26 +587,35 @@ class ArsManager:
         gen_characteristics_b = ttk.Button(popup,
                                            text="Re-roll Characteristics",
                                            command=partial(gen_characteristics,
-                                                           values))
+                                                           values),
+                                           underline=8)
         gen_characteristics_b.grid(column=0, row=1, padx=10, pady=10)
+        popup.bind('<Alt-c>', lambda e:gen_characteristics(values))
 
         gen_abilities_b = ttk.Button(popup,
                                      text="Re-roll Abilities",
                                      command=partial(gen_abilities,
-                                                     values))
+                                                     values),
+                                     underline=8)
         gen_abilities_b.grid(column=0, row=2, padx=10, pady=10)
+        popup.bind('<Alt-a>', lambda e:gen_abilities(values))
 
         gen_techniques_b = ttk.Button(popup,
                                       text="Re-roll Techniques",
                                       command=partial(gen_techniques,
-                                                      values))
+                                                      values),
+                                      underline=8)
         gen_techniques_b.grid(column=0, row=3, padx=10, pady=10)
+        popup.bind('<Alt-t>', lambda e:gen_techniques(values))
+
 
         gen_forms_b = ttk.Button(popup,
                                  text="Re-roll Forms",
                                  command=partial(gen_forms,
-                                                 values))
+                                                 values),
+                                 underline=8)
         gen_forms_b.grid(column=0, row=4, padx=10, pady=10)
+        popup.bind('<Alt-f>', lambda e:gen_forms(values))
 
         def save_and_close_popup(self, name, values):
             if not name or name in self.setting.characters:
@@ -584,16 +629,22 @@ class ArsManager:
         # Button to generate random character stats
         generate_button = ttk.Button(popup, text="Re-roll all Stats",
                                      command=partial(generate_random_stats,
-                                                     values))
+                                                     values),
+                                     underline=0)
         generate_button.grid(column=1, row=5, padx=10, pady=10)
+        popup.bind('<Alt-r>', lambda e:generate_random_stats(values))
 
         # Save Character button
         save_button = ttk.Button(popup,
                                  text="Save Character",
                                  command=lambda:
                                  save_and_close_popup(self, name_entry.get(),
-                                                      values))
+                                                      values),
+                                 underline=0)
         save_button.grid(column=3, row=5, padx=10, pady=10)
+        popup.bind('<Alt-s>', lambda e:save_and_close_popup(self,
+                                                               name_entry.get(),
+                                                               values))
 
         # Run the Tkinter main loop for the popup window
         popup.mainloop()
