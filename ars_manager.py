@@ -114,6 +114,7 @@ class Setting:
         headers += lists_and_data.FORMS
         for _, area in self.ability_ordering.items():
             headers += area
+        headers += list(self.groups.keys())
         return headers
 
 class SortableTable(ttk.Treeview):
@@ -148,6 +149,7 @@ class SortableTable(ttk.Treeview):
 class ArsManager:
     def __init__(self, root):
         self.root = root
+        self.root.geometry('500x250')
         self.root.title("Ars Manager")
         self.setting = None # load of create setting before anything else
 
@@ -233,6 +235,7 @@ class ArsManager:
     def new_setting(self):
         # Create a new Toplevel window (popup)
         popup = tk.Toplevel(self.root)
+        popup.geometry('250x150')
         popup.title("New Setting")
 
         # Label and Entry for the user to input the setting name
@@ -255,8 +258,38 @@ class ArsManager:
                     filetypes=[("JSON files", "*.json")]
                 )
 
+                # default groups
+                groups = {"Covenant": [],
+                          "House": ["Bjornaer",
+                                    "Bonisagus",
+                                    "Criamon",
+                                    "Ex Miscellanea",
+                                    "Flambeau",
+                                    "Guernicus",
+                                    "Jerbiton",
+                                    "Mercere",
+                                    "Merinita",
+                                    "Tremere",
+                                    "Tytalus",
+                                    "Verditius"],
+                          "Tribunal": ["Greater Alps",
+                                       "Hibernia",
+                                       "Iberia",
+                                       "Levant",
+                                       "Loch Leglean",
+                                       "Normandy",
+                                       "Novgorod",
+                                       "Provence",
+                                       "Rhine",
+                                       "Rome",
+                                       "Stonehenge",
+                                       "Thebe",
+                                       "Transylvania",]}
+
                 # Create a new Setting instance
-                new_setting = Setting(name=setting_name, save_name=file_path)
+                new_setting = Setting(name=setting_name,
+                                      save_name=file_path,
+                                      groups=groups)
 
                 # Update the current setting
                 self.setting = new_setting
@@ -400,26 +433,12 @@ class ArsManager:
         # Run the Tkinter main loop for the popup window
         popup.mainloop()
 
-
-    def create_new_character(self,
-                             name,
-                             values,
-                             ):
-        new_char =  cg.create_mage_from_generated_values(name,
-                                                         values,
-                                                         rel_prio_weight=0.5,
-                                                         budget=35)
-        self.setting.add_character(new_char)
-        self.update_table()
-        # we autosave after each character has been created
-        self.save_setting()
-
     def create_character_popup(self):
         # Create a new Toplevel window (popup) for character creation
         popup = tk.Toplevel(self.root)
         popup.title("Create New Character")
 
-        popup.grid_rowconfigure(2, minsize=550)
+        popup.grid_rowconfigure(4, minsize=550)
 
         style = ttk.Style()
         style.configure('Monospaced.TLabel', font='Courier 10') # Courier
@@ -428,7 +447,7 @@ class ArsManager:
         name_label = tk.Label(popup, text="Enter Character Name:")
         name_label.grid(column=0, row=0, sticky=tk.NW, padx=10, pady=10)
 
-        name_entry = tk.Entry(popup, width=50)
+        name_entry = tk.Entry(popup, width=30)
         name_entry.grid(column=1,
                         row=0,
                         sticky=tk.NW,
@@ -436,6 +455,29 @@ class ArsManager:
                         padx=10,
                         pady=10)
         name_entry.focus()
+
+        groups_label = tk.Label(popup, text="Which groups are the character in?")
+        groups_label.grid(column=0, row=1, rowspan=2, sticky=tk.NW, padx=10, pady=10)
+
+        house_label = tk.Label(popup, text="House")
+        house_label.grid(column=1, row=1, sticky=tk.NW, padx=10)
+        covenant_label = tk.Label(popup, text="Covenant")
+        covenant_label.grid(column=2, row=1, sticky=tk.NW, padx=10)
+        tribunal_label = tk.Label(popup, text="Tribunal")
+        tribunal_label.grid(column=3, row=1, sticky=tk.NW, padx=10)
+
+        house = tk.StringVar()
+        house_box = ttk.Combobox(popup, width = 27, textvariable = house)
+        house_box['values'] = self.setting.groups["House"]
+        house_box.grid(column=1, row=2, sticky=tk.NW, padx=10)
+        covenant = tk.StringVar()
+        covenant_box = ttk.Combobox(popup, width = 27, textvariable = covenant)
+        covenant_box['values'] = self.setting.groups["Covenant"]
+        covenant_box.grid(column=2, row=2, sticky=tk.NW, padx=10)
+        tribunal = tk.StringVar()
+        tribunal_box = ttk.Combobox(popup, width = 27, textvariable = tribunal)
+        tribunal_box['values'] = self.setting.groups["Tribunal"]
+        tribunal_box.grid(column=3, row=2, sticky=tk.NW, padx=10)
 
         # Dropdown menu for character type
         # type_label = tk.Label(popup, text="Select Character Type:")
@@ -453,7 +495,7 @@ class ArsManager:
                                          justify=tk.LEFT,
                                          style='Monospaced.TLabel',)
         characteristics_label.grid(column=1,
-                                   row=1,
+                                   row=3,
                                    sticky=tk.NW,
                                    columnspan=3,
                                    padx=10,
@@ -465,7 +507,7 @@ class ArsManager:
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
         abilities1_label.grid(column=1,
-                              row=2,
+                              row=4,
                               sticky=tk.NW,
                               padx=10,
                               pady=10,)
@@ -475,7 +517,7 @@ class ArsManager:
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
         abilities2_label.grid(column=2,
-                              row=2,
+                              row=4,
                               sticky=tk.NW,
                               padx=10,
                               pady=10,)
@@ -485,7 +527,7 @@ class ArsManager:
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
         abilities3_label.grid(column=3,
-                              row=2,
+                              row=4,
                               sticky=tk.NW,
                               padx=10,
                               pady=10,)
@@ -495,7 +537,7 @@ class ArsManager:
                                     justify=tk.LEFT,
                                     style='Monospaced.TLabel',)
         techniques_label.grid(column=1,
-                              row=3,
+                              row=5,
                               sticky=tk.NW,
                               columnspan=3,
                               padx=10,
@@ -505,7 +547,7 @@ class ArsManager:
                                text="Forms:",
                                justify=tk.LEFT,
                                style='Monospaced.TLabel',)
-        forms_label.grid(column=1, row=4, sticky=tk.NW,columnspan=3, padx=10)
+        forms_label.grid(column=1, row=6, sticky=tk.NW,columnspan=3, padx=10)
 
         def add_if_any_val(part: str,
                            abil_vis: dict,
@@ -591,7 +633,7 @@ class ArsManager:
                                            command=partial(gen_characteristics,
                                                            values),
                                            underline=8)
-        gen_characteristics_b.grid(column=0, row=1, padx=10, pady=10)
+        gen_characteristics_b.grid(column=0, row=3, padx=10, pady=10)
         popup.bind('<Alt-c>', lambda e:gen_characteristics(values))
 
         gen_abilities_b = ttk.Button(popup,
@@ -599,7 +641,7 @@ class ArsManager:
                                      command=partial(gen_abilities,
                                                      values),
                                      underline=8)
-        gen_abilities_b.grid(column=0, row=2, padx=10, pady=10)
+        gen_abilities_b.grid(column=0, row=4, padx=10, pady=10)
         popup.bind('<Alt-a>', lambda e:gen_abilities(values))
 
         gen_techniques_b = ttk.Button(popup,
@@ -607,7 +649,7 @@ class ArsManager:
                                       command=partial(gen_techniques,
                                                       values),
                                       underline=8)
-        gen_techniques_b.grid(column=0, row=3, padx=10, pady=10)
+        gen_techniques_b.grid(column=0, row=5, padx=10, pady=10)
         popup.bind('<Alt-t>', lambda e:gen_techniques(values))
 
 
@@ -616,7 +658,7 @@ class ArsManager:
                                  command=partial(gen_forms,
                                                  values),
                                  underline=8)
-        gen_forms_b.grid(column=0, row=4, padx=10, pady=10)
+        gen_forms_b.grid(column=0, row=6, padx=10, pady=10)
         popup.bind('<Alt-f>', lambda e:gen_forms(values))
 
         def save_and_close_popup(self, name, values):
@@ -624,8 +666,25 @@ class ArsManager:
                 tk.messagebox.showwarning("Warning",
                                           "Please enter a unique character name.")
                 return  # Don't proceed further if the name is empty
-            self.create_new_character(name, values)
-            # Close the popup
+            groups = {"House": house.get(),
+                      "Covenant": covenant.get(),
+                      "Tribunal": tribunal.get()}
+            # add groups to setting if not already there
+            for category, group in groups.items():
+                if category not in self.setting.groups:
+                    self.setting.groups[category] = [group]
+                if group not in self.setting.groups:
+                    self.setting.groups[category].append(group)
+            new_char =  cg.create_mage_from_gen_vals(name,
+                                                     values,
+                                                     groups=groups,
+                                                     rel_prio_weight=0.5,
+                                                     budget=35)
+            self.setting.add_character(new_char)
+            self.update_table()
+            # we autosave after each character has been created
+            self.save_setting()
+                # Close the popup
             popup.destroy()
 
         # Button to generate random character stats
@@ -633,7 +692,7 @@ class ArsManager:
                                      command=partial(generate_random_stats,
                                                      values),
                                      underline=0)
-        generate_button.grid(column=1, row=5, padx=10, pady=10)
+        generate_button.grid(column=1, row=7, padx=10, pady=10)
         popup.bind('<Alt-r>', lambda e:generate_random_stats(values))
 
         # Save Character button
@@ -643,7 +702,7 @@ class ArsManager:
                                  save_and_close_popup(self, name_entry.get(),
                                                       values),
                                  underline=0)
-        save_button.grid(column=3, row=5, padx=10, pady=10)
+        save_button.grid(column=3, row=7, padx=10, pady=10)
         popup.bind('<Alt-s>', lambda e:save_and_close_popup(self,
                                                                name_entry.get(),
                                                                values))

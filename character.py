@@ -286,6 +286,8 @@ class Character:
         ret |= self.characteristics
         for key, val in self.stats.items():
             ret[key] = val.value
+        for category, group in self.groups.items():
+            ret[category] = group
         return ret
 
     def __json__(self):
@@ -312,7 +314,6 @@ class Character:
             "chunk_mean": self.chunk_mean,
             "current_year": self._current_year,
             "softcapped_stats": self.softcapped_stats,
-            "groups": self.groups,
             "history": history,
         }
 

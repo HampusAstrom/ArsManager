@@ -327,12 +327,13 @@ def gen_mage_values() -> dict:
            }
     return ret
 
-def create_mage_from_generated_values(name: str,
+def create_mage_from_gen_vals(name: str,
                                       values: dict,
                                       char_input_year: int = 1220,
                                       char_input_age: int = 25,
                                       rel_prio_weight: float = 1,
                                       budget: int = 30,
+                                      groups: dict = {},
                                       ) -> Character:
     stats = values["abilities"] | values["techniques"] | values["forms"]
     characteristics = values["characteristics"]
@@ -345,8 +346,9 @@ def create_mage_from_generated_values(name: str,
                     characteristics,
                     rng,
                     rel_prio_weight,
+                    groups=groups,
                     budget = budget,
-                    softcapped_stats=SOFTCAPPED_STATS
+                    softcapped_stats=SOFTCAPPED_STATS,
                     )
 
 # generates standard age 25, just out of gauntlet mages from mostly fixed arrays
@@ -438,7 +440,7 @@ def example_use():
         print(val["String"])
         print()
 
-    examplo = create_mage_from_generated_values("Examplo de Magicus",
+    examplo = create_mage_from_gen_vals("Examplo de Magicus",
                                                 values,
                                                 rel_prio_weight=0.5,
                                                 budget=35)
