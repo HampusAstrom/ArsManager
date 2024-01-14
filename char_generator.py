@@ -51,7 +51,7 @@ def get_template(name: str) -> tuple[list, list, list]:
         abilities = GENABILITIES + ACAABILITIES + ARCABILITIES + MARABILITIES
         return characteristics, abilities, tech, form
     else:
-        raise Exception(f"There is no template named {name}") 
+        raise Exception(f"There is no template named {name}")
 
 # designed for mages, at least change prio for other characters
 def get_characteristics_from_array(balance: str = None, ic: int = None):

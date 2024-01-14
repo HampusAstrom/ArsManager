@@ -130,8 +130,8 @@ SOCIAL = {"Bargain": 1,
           }
 
 MARTIAL = {"Bows": 5,
-           "Great Weapon": 5, 
-           "Single Weapon": 5, 
+           "Great Weapon": 5,
+           "Single Weapon": 5,
            "Thrown Weapon": 2,
            "Brawl": 3,
            "Awareness": 1,
@@ -233,7 +233,7 @@ GOVERNANCE = {"Artes Liberales": 3,
               }
 
 # most here assumes covenant member, cut if not
-LORES = {"Magic Lore": 2, 
+LORES = {"Magic Lore": 2,
          "Dominion Lore": 1,
          "Faerie Lore": 1,
          "Infernal Lore": 0.2,
