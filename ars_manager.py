@@ -117,13 +117,13 @@ class Setting:
         return headers
 
 class SortableTable(ttk.Treeview):
-    def __init__(self, parent, columns, data, *args, **kwargs):
+    def __init__(self, parent, columns, characters, *args, **kwargs):
         ttk.Treeview.__init__(self, parent, columns=columns, *args, **kwargs)
         # self.heading("#0", text="Index")
         for col in columns:
             self.heading(col, text=col, command=lambda c=col: self.sortby(c, 0))
             self.column(col, width=100, anchor="center", stretch=True)
-        self.populate_table(data)
+        self.format_and_populate(characters)
 
     def sortby(self, col, descending):
         data = [(self.set(child, col), child) for child in self.get_children('')]
@@ -137,12 +137,19 @@ class SortableTable(ttk.Treeview):
         for i, item in enumerate(self.data):
             self.insert("", "end", values=tuple(item))
 
+    def format_and_populate(self, characters: dict):
+        data = []
+        for char in characters.values():
+            entry, _ = char.name2charfield(self["columns"])
+            data.append(entry)
+        self.populate_table(data)
+
+
 class ArsManager:
     def __init__(self, root):
         self.root = root
         self.root.title("Ars Manager")
-        self.setting = Setting(name="Default Setting",
-                               save_name="default_setting")
+        self.setting = None # load of create setting before anything else
 
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
@@ -208,7 +215,7 @@ class ArsManager:
 
     def create_table(self):
         columns = ("Name", "Age", "Characteristics")
-        self.tree = SortableTable(self.root, columns, [], show="headings")
+        self.tree = SortableTable(self.root, columns, {}, show="headings")
 
         for col in columns:
             self.tree.heading(col, text=col)
@@ -300,12 +307,7 @@ class ArsManager:
         self.tree.delete(*self.tree.get_children())
 
         # Populate the table with character data
-        # TODO fix that this sends wrong info, let sorter sort it out instead
-        data = [
-            (char.name, char.current_age, char.stats, char.characteristics)
-            for char in self.setting.characters.values()
-        ]
-        self.tree.populate_table(data)
+        self.tree.format_and_populate(self.setting.characters)
 
     def export_characters(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".csv",

@@ -15,7 +15,7 @@ def dict2string(dct, sort=True, lb=False) -> str:
             s += f"{key}: {val} "
     return s
 
-# only tracks values of the ability, assume that the name will be tracked when 
+# only tracks values of the ability, assume that the name will be tracked when
 # it is stored in a stats dict
 class Ability:
     def __init__(self,
@@ -65,7 +65,7 @@ class Ability:
         assert value*5 >= xp # otherwise value should be higher
         self._value = value
         self._tot_xp = self.val2xp(value) + xp
-    
+
     @property
     def tot_xp(self) -> int:
         return self._tot_xp
@@ -78,15 +78,15 @@ class Ability:
     @property
     def value(self) -> int:
         return self._value
-    
+
     @value.setter
     def value(self, val) -> None:
         self.set_val(val)
-    
+
     def get_rest_xp(self) -> int:
         return self.tot_xp - self.val2xp(self._value)
 
-# only tracks values of the ability, assume that the name will be tracked when 
+# only tracks values of the ability, assume that the name will be tracked when
 # it is stored in a stats dict
 class Art(Ability):
     def __init__(self,
@@ -95,7 +95,7 @@ class Art(Ability):
                  tot_xp: bool = False
                  ) -> None:
         super().__init__(value, xp, tot_xp)
-    
+
     @staticmethod
     def xp2val(xp) -> tuple[int, int]:
         val = int(-1/2 + np.sqrt(1/4 + 2*xp))
@@ -255,7 +255,7 @@ class Character:
             else:
                 abilities[key] = val
         return abilities, arts
-    
+
     @staticmethod
     def separate_tech_and_form(arts) -> tuple[dict, dict]:
         t = ["Cr","In","Mu","Pe","Re",]
@@ -354,6 +354,29 @@ class Character:
 
         return char
 
+    def name2charfield(self, fields: list):
+        abil, arts = self.get_arts_and_abilities()
+        tech, form = self.separate_tech_and_form(arts)
+
+        n2char = {"Name": self.name,
+                  "Age": self.current_age,
+                  "Characteristics": self.characteristics,
+                  "Abilities": abil,
+                  "Ars": arts,
+                  "Techniques": tech,
+                  "Forms": form,
+                  }
+        if self.groups:
+            n2char |= self.groups
+        entry = []
+        for field in fields:
+            if field in n2char:
+                entry.append(n2char[field])
+            else:
+                entry.append("")
+        return entry, n2char
+
+
     # TODO add method for renaming ability (and fixing it through history)
 
     # TODO add method to add xp without moving year to generate initial stats
@@ -365,7 +388,7 @@ class Character:
     # both to handle diff between arts and abilities and to taper of skills
     # like languages after they are mastered (lvl 4-6ish)
 
-    # TODO consider if I need some @x.setter or @x.getter functions to 
+    # TODO consider if I need some @x.setter or @x.getter functions to
     # return copies of variables
 
 def calc_used_xp(array: list, tpe: type) -> int:
