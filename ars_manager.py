@@ -808,7 +808,8 @@ class ArsManager:
                 tk.messagebox.showwarning("Warning",
                                           "Please enter a unique character name.")
                 return  # Don't proceed further if the name is empty
-            update_all()
+            if age_entry_var.get() != ccvals["new_char"].char_input_year:
+                update_all()
             groups = {"House": house.get(),
                       "Covenant": covenant.get(),
                       "Tribunal": tribunal.get()}
