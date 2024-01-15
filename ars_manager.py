@@ -449,14 +449,14 @@ class ArsManager:
         ccvals["age_var"] = age_entry_var
         def gen_and_age_char(name: str = "temp_to_be_replaced",):
             values = ccvals["values"]
-            gauntlet_age = age_entry_var.get()
-            if gauntlet_age > self.setting.current_year:
+            gauntlet_year = age_entry_var.get()
+            if gauntlet_year > self.setting.current_year:
                 tk.messagebox.showwarning("Warning",
                                           "Gauntlet age cannot be after current year!")
                 return  # Don't proceed further if the name is empty
             char =  cg.create_mage_from_gen_vals(name,
                                                  values,
-                                                 char_input_year=gauntlet_age,
+                                                 char_input_year=gauntlet_year,
                                                  current_year = self.setting.current_year,
                                                  rel_prio_weight=0.5,
                                                  budget=35)

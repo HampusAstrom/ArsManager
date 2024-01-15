@@ -181,7 +181,6 @@ class Character:
             assert cyear == year
             self.stats = copy.deepcopy(cstats)
 
-        self._current_year = year
         self._update_age()
 
     def add_years(self, years):
@@ -351,7 +350,7 @@ class Character:
             hstats |= cls.stats_from_json(stats["arts"], Art)
             char.history[int(year)] = hstats
 
-        char._current_year = int(serialized_data["current_year"])
+        char.set_to_year(int(serialized_data["current_year"]))
 
         return char
 
