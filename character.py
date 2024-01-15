@@ -361,11 +361,14 @@ class Character:
 
         n2char = {"Name": self.name,
                   "Age": self.current_age,
-                  "Characteristics": self.characteristics,
-                  "Abilities": abil,
-                  "Ars": arts,
-                  "Techniques": tech,
-                  "Forms": form,
+                  "Characteristics": dict2string(self.characteristics),
+                  "Abilities": dict2string(abil),
+                  "Arts": dict2string(arts),
+                  "Techniques": dict2string(tech),
+                  "Forms": dict2string(form),
+                  "House": self.groups["House"],
+                  "Covenant": self.groups["Covenant"],
+                  "Tribunal": self.groups["Tribunal"],
                   }
         if self.groups:
             n2char |= self.groups

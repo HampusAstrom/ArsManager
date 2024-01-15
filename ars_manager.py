@@ -149,7 +149,7 @@ class SortableTable(ttk.Treeview):
 class ArsManager:
     def __init__(self, root):
         self.root = root
-        self.root.geometry('500x250')
+        self.root.geometry('1000x500')
         self.root.title("Ars Manager")
         self.setting = None # load of create setting before anything else
 
@@ -216,7 +216,16 @@ class ArsManager:
         self.menubar.entryconfigure("Setting", state=state)
 
     def create_table(self):
-        columns = ("Name", "Age", "Characteristics")
+        columns = ("Name",
+                   "Age",
+                   "House",
+                   "Covenant",
+                   "Tribunal",
+                   "Techniques",
+                   "Forms",
+                   "Characteristics",
+                   "Abilities"
+                   )
         self.tree = SortableTable(self.root, columns, {}, show="headings")
 
         for col in columns:
