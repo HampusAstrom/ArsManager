@@ -9,7 +9,8 @@ rng = np.random.default_rng()
 
 def abil_order_split(abil_dict: dict,
                      order_split: dict = DEFAULT_ABIL_ORDERING,
-                     sort = True):
+                     sort = True,
+                     ignore_other = False):
     order_split = copy.deepcopy(order_split)
     max_name_length = 22 # override with minimum for now
     for key in abil_dict.keys():
@@ -26,7 +27,7 @@ def abil_order_split(abil_dict: dict,
                 found += 1
                 ret[title]["String"] += f"{ability:<{max_name_length+3}} {abil_dict[ability]}\n"
                 ret[title]["Dict list"].append((ability, abil_dict[ability]))
-    if found < len(abil_dict): # TODO replace with adding to an "other" category?
+    if found < len(abil_dict) and not ignore_other: # TODO replace with adding to an "other" category?
         print("There are abilities that where not found, they are not displayed!")
     return ret
 
@@ -331,6 +332,7 @@ def create_mage_from_gen_vals(name: str,
                                       values: dict,
                                       char_input_year: int = 1220,
                                       char_input_age: int = 25,
+                                      current_year: int = 1220,
                                       rel_prio_weight: float = 1,
                                       budget: int = 30,
                                       groups: dict = {},
@@ -347,6 +349,7 @@ def create_mage_from_gen_vals(name: str,
                     rng,
                     rel_prio_weight,
                     groups=groups,
+                    current_year=current_year,
                     budget = budget,
                     softcapped_stats=SOFTCAPPED_STATS,
                     )

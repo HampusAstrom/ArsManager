@@ -434,6 +434,94 @@ class ArsManager:
         popup.mainloop()
 
     def create_character_popup(self):
+        ccvals = {}
+        ccvals["values"] = cg.gen_mage_values()
+        age_entry_var = tk.IntVar(value=1220)
+        ccvals["age_var"] = age_entry_var
+        def gen_and_age_char(name: str = "temp_to_be_replaced",):
+            values = ccvals["values"]
+            gauntlet_age = age_entry_var.get()
+            if gauntlet_age > self.setting.current_year:
+                tk.messagebox.showwarning("Warning",
+                                          "Gauntlet age cannot be after current year!")
+                return  # Don't proceed further if the name is empty
+            char =  cg.create_mage_from_gen_vals(name,
+                                                 values,
+                                                 char_input_year=gauntlet_age,
+                                                 current_year = self.setting.current_year,
+                                                 rel_prio_weight=0.5,
+                                                 budget=35)
+            ccvals["new_char"] = char
+
+        def update_all():
+            values = ccvals["values"]
+            # Update the displayed values for characteristics, abilities, etc.
+            characteristics_label.config(text=f"--Characteristics--\n"
+                                     f"{d2s(values['characteristics'],sort=False)}")
+            update_ability_display()
+            techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
+            forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
+            gen_and_age_char()
+            lcharacteristics_label.config(text=f"--Characteristics--\n{d2s(ccvals['new_char'].characteristics,sort=False)}")
+            update_ability_display()
+            _, arts = ccvals["new_char"].get_arts_and_abilities()
+            tech, form = ccvals["new_char"].separate_tech_and_form(arts)
+            ltechniques_label.config(text=f"--Techniques--\n{d2s(tech)}")
+            lforms_label.config(text=f"--Forms--\n{d2s(form)}")
+
+        def update_ability_display():
+            values = ccvals["values"]
+            abil_vis = cg.abil_order_split(values["abilities"],
+                                           self.setting.ability_ordering)
+            part1 = compose_ability_part(["Core Magic",
+                                          "Core Academic",
+                                          "Social",
+                                          "Martial"],
+                                          abil_vis)
+            abilities1_label.config(text=f"--Abilities--\n{part1}")
+            part2 = compose_ability_part(["Adventure",
+                                          "Languages",
+                                          "Medicine",
+                                          "Arts and Crafting"],
+                                          abil_vis)
+            abilities2_label.config(text=part2)
+            part3 = compose_ability_part(["Magic Lores",
+                                          "Area Lores",
+                                          "Org. Lores",
+                                          "Professions",
+                                          "Law and Religion",
+                                          "Supernatural"],
+                                          abil_vis)
+            abilities3_label.config(text=part3)
+            # TODO this is a bit of a hack, assumes that name, age arts
+            # and grounps don't contain any names that overlap with abilities
+            # but that would be a problem for exporting too...
+            cdict = ccvals["new_char"].to_dict()
+            labil_vis = cg.abil_order_split(cdict,
+                                           self.setting.ability_ordering,
+                                           ignore_other=True)
+            part1 = compose_ability_part(["Core Magic",
+                                          "Core Academic",
+                                          "Social",
+                                          "Martial"],
+                                          labil_vis)
+            labilities1_label.config(text=f"--Abilities--\n{part1}")
+            part2 = compose_ability_part(["Adventure",
+                                          "Languages",
+                                          "Medicine",
+                                          "Arts and Crafting"],
+                                          labil_vis)
+            labilities2_label.config(text=part2)
+            part3 = compose_ability_part(["Magic Lores",
+                                          "Area Lores",
+                                          "Org. Lores",
+                                          "Professions",
+                                          "Law and Religion",
+                                          "Supernatural"],
+                                          labil_vis)
+            labilities3_label.config(text=part3)
+
+
         # Create a new Toplevel window (popup) for character creation
         popup = tk.Toplevel(self.root)
         popup.title("Create New Character")
@@ -444,10 +532,10 @@ class ArsManager:
         style.configure('Monospaced.TLabel', font='Courier 10') # Courier
 
         # Label and Entry for the user to input the character name
-        name_label = tk.Label(popup, text="Enter Character Name:")
+        name_label = ttk.Label(popup, text="Enter Character Name:")
         name_label.grid(column=0, row=0, sticky=tk.NW, padx=10, pady=10)
 
-        name_entry = tk.Entry(popup, width=30)
+        name_entry = ttk.Entry(popup, width=30)
         name_entry.grid(column=1,
                         row=0,
                         sticky=tk.NW,
@@ -456,14 +544,14 @@ class ArsManager:
                         pady=10)
         name_entry.focus()
 
-        groups_label = tk.Label(popup, text="Which groups are the character in?")
+        groups_label = ttk.Label(popup, text="Which groups are the character in?")
         groups_label.grid(column=0, row=1, rowspan=2, sticky=tk.NW, padx=10, pady=10)
 
-        house_label = tk.Label(popup, text="House")
+        house_label = ttk.Label(popup, text="House")
         house_label.grid(column=1, row=1, sticky=tk.NW, padx=10)
-        covenant_label = tk.Label(popup, text="Covenant")
+        covenant_label = ttk.Label(popup, text="Covenant")
         covenant_label.grid(column=2, row=1, sticky=tk.NW, padx=10)
-        tribunal_label = tk.Label(popup, text="Tribunal")
+        tribunal_label = ttk.Label(popup, text="Tribunal")
         tribunal_label.grid(column=3, row=1, sticky=tk.NW, padx=10)
 
         house = tk.StringVar()
@@ -549,6 +637,94 @@ class ArsManager:
                                style='Monospaced.TLabel',)
         forms_label.grid(column=1, row=6, sticky=tk.NW,columnspan=3, padx=10)
 
+        # display char after leveling
+        vseparator = ttk.Separator(popup, orient="vertical")
+        vseparator.grid(column=4, row=0, rowspan=7, sticky='ns')
+
+        older_label = ttk.Label(popup, text="Here are the stats the character"
+                                            "will have at the current year")
+        older_label.grid(column=5, row=0, rowspan=3, sticky=tk.NW, padx=10, pady=10)
+
+        age_txt = f"Current setting year is {self.setting.current_year}. \n"
+        age_txt += f"At what year did the character pass\n"
+        age_txt += f"their gauntlet (at the age of 25)?"
+        age_label = ttk.Label(popup, text=age_txt)
+        age_label.grid(column=5, row=2, sticky=tk.NW, padx=10, pady=10)
+
+        age_entry = ttk.Entry(popup, width=30, text=age_entry_var)
+        age_entry.grid(column=6,
+                        row=2,
+                        sticky=tk.W,
+                        columnspan=3,
+                        padx=10,
+                        pady=10)
+        age_entry.focus()
+        age_entry_b = ttk.Button(popup,
+                                 text="Set Gauntlet Age and (Re)run Aging",
+                                 command=lambda:update_all(),
+                                 underline=4)
+        age_entry_b.grid(column=7, row=2, padx=10, pady=10)
+        popup.bind('<Alt-g>', lambda e:update_all())
+
+        lcharacteristics_label = ttk.Label(popup,
+                                         text="--Characteristics--",
+                                         justify=tk.LEFT,
+                                         style='Monospaced.TLabel',)
+        lcharacteristics_label.grid(column=5,
+                                   row=3,
+                                   sticky=tk.NW,
+                                   columnspan=3,
+                                   padx=10,
+                                   pady=10,)
+
+        labilities1_label = ttk.Label(popup,
+                                   text="Abilities:",
+                                   wraplength=400,
+                                   justify=tk.LEFT,
+                                   style='Monospaced.TLabel',)
+        labilities1_label.grid(column=5,
+                              row=4,
+                              sticky=tk.NW,
+                              padx=10,
+                              pady=10,)
+        labilities2_label = ttk.Label(popup,
+                                   text="Abilities:",
+                                   wraplength=400,
+                                   justify=tk.LEFT,
+                                   style='Monospaced.TLabel',)
+        labilities2_label.grid(column=6,
+                              row=4,
+                              sticky=tk.NW,
+                              padx=10,
+                              pady=10,)
+        labilities3_label = ttk.Label(popup,
+                                   text="Abilities:",
+                                   wraplength=400,
+                                   justify=tk.LEFT,
+                                   style='Monospaced.TLabel',)
+        labilities3_label.grid(column=7,
+                              row=4,
+                              sticky=tk.NW,
+                              padx=10,
+                              pady=10,)
+
+        ltechniques_label = ttk.Label(popup,
+                                    text="Techniques:",
+                                    justify=tk.LEFT,
+                                    style='Monospaced.TLabel',)
+        ltechniques_label.grid(column=5,
+                              row=5,
+                              sticky=tk.NW,
+                              columnspan=3,
+                              padx=10,
+                              pady=10,)
+
+        lforms_label = ttk.Label(popup,
+                               text="Forms:",
+                               justify=tk.LEFT,
+                               style='Monospaced.TLabel',)
+        lforms_label.grid(column=5, row=6, sticky=tk.NW,columnspan=3, padx=10)
+
         def add_if_any_val(part: str,
                            abil_vis: dict,
                            key: str) -> str:
@@ -563,109 +739,76 @@ class ArsManager:
                 part = add_if_any_val(part, abil_vis, area)
             return part
 
-        def update_ability_display():
-            abil_vis = cg.abil_order_split(values["abilities"],
-                                           self.setting.ability_ordering)
-            part1 = compose_ability_part(["Core Magic",
-                                          "Core Academic",
-                                          "Social",
-                                          "Martial"],
-                                          abil_vis)
-            abilities1_label.config(text=f"Abilities:\n{part1}")
-            part2 = compose_ability_part(["Adventure",
-                                          "Languages",
-                                          "Medicine",
-                                          "Arts and Crafting"],
-                                          abil_vis)
-            abilities2_label.config(text=part2)
-            part3 = compose_ability_part(["Magic Lores",
-                                          "Area Lores",
-                                          "Org. Lores",
-                                          "Professions",
-                                          "Law and Religion",
-                                          "Supernatural"],
-                                          abil_vis)
-            abilities3_label.config(text=part3)
-
-        values = cg.gen_mage_values()
+        gen_and_age_char()
         # Update the displayed values for characteristics, abilities, etc.
-        characteristics_label.config(text=f"--Characteristics--\n"
-                                     f"{d2s(values['characteristics'],sort=False)}")
-        update_ability_display()
-        techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
-        forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
+        update_all()
 
         # Function to generate random character stats
-        def generate_random_stats(values):
+        def generate_random_stats():
+            values = ccvals["values"]
             # Customize based on your stat generation function
             values['characteristics'] = cg.get_characteristics_from_array()
             values['abilities'], values['ab_prios'], values['area_prios'] = cg.get_abilities_from_array()
             values['techniques'], values['te_prios'] = cg.get_techniques_from_array()
             values['forms'], values['fo_prios'] = cg.get_forms_from_array()
+            update_all()
 
-            # Update the displayed values for characteristics, abilities, etc.
-            characteristics_label.config(text=f"--Characteristics--\n"
-                                     f"{d2s(values['characteristics'],sort=False)}")
-            update_ability_display()
-            techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
-            forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
-
-        def gen_characteristics(values):
+        def gen_characteristics():
+            values = ccvals["values"]
             values['characteristics'] = cg.get_characteristics_from_array()
             characteristics_label.config(text=f"--Characteristics--\n"
                                      f"{d2s(values['characteristics'],sort=False)}")
 
-        def gen_abilities(values):
+        def gen_abilities():
+            values = ccvals["values"]
             values['abilities'], values['ab_prios'], values['area_prios'] = cg.get_abilities_from_array()
             update_ability_display()
 
-        def gen_techniques(values):
+        def gen_techniques():
+            values = ccvals["values"]
             values['techniques'], values['te_prios'] = cg.get_techniques_from_array()
             techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
 
-        def gen_forms(values):
+        def gen_forms():
+            values = ccvals["values"]
             values['forms'], values['fo_prios'] = cg.get_forms_from_array()
             forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
 
         # Buttons to regenerate each section
         gen_characteristics_b = ttk.Button(popup,
                                            text="Re-roll Characteristics",
-                                           command=partial(gen_characteristics,
-                                                           values),
+                                           command=gen_characteristics,
                                            underline=8)
         gen_characteristics_b.grid(column=0, row=3, padx=10, pady=10)
-        popup.bind('<Alt-c>', lambda e:gen_characteristics(values))
+        popup.bind('<Alt-c>', lambda e:gen_characteristics)
 
         gen_abilities_b = ttk.Button(popup,
                                      text="Re-roll Abilities",
-                                     command=partial(gen_abilities,
-                                                     values),
+                                     command=gen_abilities,
                                      underline=8)
         gen_abilities_b.grid(column=0, row=4, padx=10, pady=10)
-        popup.bind('<Alt-a>', lambda e:gen_abilities(values))
+        popup.bind('<Alt-a>', lambda e:gen_abilities)
 
         gen_techniques_b = ttk.Button(popup,
                                       text="Re-roll Techniques",
-                                      command=partial(gen_techniques,
-                                                      values),
+                                      command=gen_techniques,
                                       underline=8)
         gen_techniques_b.grid(column=0, row=5, padx=10, pady=10)
-        popup.bind('<Alt-t>', lambda e:gen_techniques(values))
-
+        popup.bind('<Alt-t>', lambda e:gen_techniques)
 
         gen_forms_b = ttk.Button(popup,
                                  text="Re-roll Forms",
-                                 command=partial(gen_forms,
-                                                 values),
+                                 command=gen_forms,
                                  underline=8)
         gen_forms_b.grid(column=0, row=6, padx=10, pady=10)
-        popup.bind('<Alt-f>', lambda e:gen_forms(values))
+        popup.bind('<Alt-f>', lambda e:gen_forms)
 
-        def save_and_close_popup(self, name, values):
+        def save_and_close_popup(self, name):
             if not name or name in self.setting.characters:
                 tk.messagebox.showwarning("Warning",
                                           "Please enter a unique character name.")
                 return  # Don't proceed further if the name is empty
+            update_all()
             groups = {"House": house.get(),
                       "Covenant": covenant.get(),
                       "Tribunal": tribunal.get()}
@@ -675,12 +818,9 @@ class ArsManager:
                     self.setting.groups[category] = [group]
                 if group not in self.setting.groups:
                     self.setting.groups[category].append(group)
-            new_char =  cg.create_mage_from_gen_vals(name,
-                                                     values,
-                                                     groups=groups,
-                                                     rel_prio_weight=0.5,
-                                                     budget=35)
-            self.setting.add_character(new_char)
+            ccvals["new_char"].name = name
+            ccvals["new_char"].groups = groups
+            self.setting.add_character(ccvals["new_char"])
             self.update_table()
             # we autosave after each character has been created
             self.save_setting()
@@ -689,23 +829,20 @@ class ArsManager:
 
         # Button to generate random character stats
         generate_button = ttk.Button(popup, text="Re-roll all Stats",
-                                     command=partial(generate_random_stats,
-                                                     values),
+                                     command=generate_random_stats,
                                      underline=0)
-        generate_button.grid(column=1, row=7, padx=10, pady=10)
-        popup.bind('<Alt-r>', lambda e:generate_random_stats(values))
+        generate_button.grid(column=2, row=7, padx=10, pady=10)
+        popup.bind('<Alt-r>', lambda e:generate_random_stats())
 
         # Save Character button
         save_button = ttk.Button(popup,
                                  text="Save Character",
                                  command=lambda:
-                                 save_and_close_popup(self, name_entry.get(),
-                                                      values),
+                                 save_and_close_popup(self, name_entry.get()),
                                  underline=0)
-        save_button.grid(column=3, row=7, padx=10, pady=10)
+        save_button.grid(column=4, row=7, padx=10, pady=10)
         popup.bind('<Alt-s>', lambda e:save_and_close_popup(self,
-                                                               name_entry.get(),
-                                                               values))
+                                                               name_entry.get()))
 
         # Run the Tkinter main loop for the popup window
         popup.mainloop()
