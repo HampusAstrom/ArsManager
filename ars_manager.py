@@ -445,15 +445,16 @@ class ArsManager:
     def create_character_popup(self):
         ccvals = {}
         ccvals["values"] = cg.gen_mage_values()
-        age_entry_var = tk.IntVar(value=1220)
+        age_entry_var = tk.IntVar(value=25)
         ccvals["age_var"] = age_entry_var
         def gen_and_age_char(name: str = "temp_to_be_replaced",):
             values = ccvals["values"]
-            gauntlet_year = age_entry_var.get()
-            if gauntlet_year > self.setting.current_year:
+            age = age_entry_var.get()
+            if age < 25:
                 tk.messagebox.showwarning("Warning",
-                                          "Gauntlet age cannot be after current year!")
+                                          "Character cannot be younger than gauntlet age at 25!")
                 return  # Don't proceed further if the name is empty
+            gauntlet_year = self.setting.current_year - age + 25
             char =  cg.create_mage_from_gen_vals(name,
                                                  values,
                                                  char_input_year=gauntlet_year,
@@ -653,9 +654,9 @@ class ArsManager:
                                             "will have at the current year")
         older_label.grid(column=5, row=0, rowspan=3, sticky=tk.NW, padx=10, pady=10)
 
-        age_txt = f"Current setting year is {self.setting.current_year}. \n"
-        age_txt += f"At what year did the character pass\n"
-        age_txt += f"their gauntlet (at the age of 25)?"
+        age_txt = f"Current setting year is {self.setting.current_year}.\n"
+        age_txt += f"How old should the character be this year?\n"
+        age_txt += f"Minimum age is 25, when they pass their gauntlet."
         age_label = ttk.Label(popup, text=age_txt)
         age_label.grid(column=5, row=2, sticky=tk.NW, padx=10, pady=10)
 
@@ -668,9 +669,9 @@ class ArsManager:
                         pady=10)
         age_entry.focus()
         age_entry_b = ttk.Button(popup,
-                                 text="Set Gauntlet Age and (Re)run Aging",
+                                 text="Set Current Age and (Re)run Aging",
                                  command=lambda:update_all(),
-                                 underline=4)
+                                 underline=13)
         age_entry_b.grid(column=7, row=2, padx=10, pady=10)
         popup.bind('<Alt-g>', lambda e:update_all())
 
@@ -819,7 +820,7 @@ class ArsManager:
                 tk.messagebox.showwarning("Warning",
                                           "Please enter a unique character name.")
                 return  # Don't proceed further if the name is empty
-            if age_entry_var.get() != ccvals["new_char"].char_input_year:
+            if age_entry_var.get() != ccvals["new_char"].current_age:
                 update_all()
             groups = {"House": house.get(),
                       "Covenant": covenant.get(),
