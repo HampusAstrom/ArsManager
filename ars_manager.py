@@ -467,7 +467,6 @@ class ArsManager:
             # Update the displayed values for characteristics, abilities, etc.
             characteristics_label.config(text=f"--Characteristics--\n"
                                      f"{d2s(values['characteristics'],sort=False)}")
-            update_ability_display()
             techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
             forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
             gen_and_age_char()
@@ -767,21 +766,24 @@ class ArsManager:
             values['characteristics'] = cg.get_characteristics_from_array()
             characteristics_label.config(text=f"--Characteristics--\n"
                                      f"{d2s(values['characteristics'],sort=False)}")
+            update_all()
 
         def gen_abilities():
             values = ccvals["values"]
             values['abilities'], values['ab_prios'], values['area_prios'] = cg.get_abilities_from_array()
-            update_ability_display()
+            update_all()
 
         def gen_techniques():
             values = ccvals["values"]
             values['techniques'], values['te_prios'] = cg.get_techniques_from_array()
             techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
+            update_all()
 
         def gen_forms():
             values = ccvals["values"]
             values['forms'], values['fo_prios'] = cg.get_forms_from_array()
             forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
+            update_all()
 
         # Buttons to regenerate each section
         gen_characteristics_b = ttk.Button(popup,
