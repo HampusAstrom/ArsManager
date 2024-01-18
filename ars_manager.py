@@ -52,12 +52,15 @@ class Setting:
 
     def __json__(self):
         # Customize serialization for the Character class
+        groups = {}
+        for category, group in self.groups.items():
+            groups[category] = list(group)
         return {
             "version": self.version,
             "name": self.name,
             "save_name": self.save_name,
             "characters": self.characters,
-            "groups": self.groups,
+            "groups": groups,
             "rng": self.rng.bit_generator.state,
             "current_year": self.current_year
         }
@@ -70,11 +73,14 @@ class Setting:
             chars[char["name"]] = Character.from_json(char)
         rng = np.random.default_rng()
         rng.bit_generator.state = serialized_data["rng"]
+        groups = {}
+        for category, group in serialized_data["groups"].items():
+            groups[category] = set(group)
         return cls(
             name=serialized_data["name"],
             save_name=serialized_data["save_name"],
             characters=chars,
-            groups=serialized_data["groups"],
+            groups=groups,
             rng=rng,
             current_year=serialized_data["current_year"]
         )
@@ -188,7 +194,7 @@ class ArsManager:
                               command=self.ask_save_setting,
                                underline=0)
         file_menu.bind("<Alt-s>", lambda e:self.ask_save_setting)
-        file_menu.add_command(label="Export Setting",
+        file_menu.add_command(label="Export Characters",
                               command=self.export_characters,
                                underline=0)
         file_menu.bind("<Alt-e>", lambda e:self.export_characters)
@@ -268,8 +274,8 @@ class ArsManager:
                 )
 
                 # default groups
-                groups = {"Covenant": [],
-                          "House": ["Bjornaer",
+                groups = {"Covenant": set(),
+                          "House": {"Bjornaer",
                                     "Bonisagus",
                                     "Criamon",
                                     "Ex Miscellanea",
@@ -280,8 +286,8 @@ class ArsManager:
                                     "Merinita",
                                     "Tremere",
                                     "Tytalus",
-                                    "Verditius"],
-                          "Tribunal": ["Greater Alps",
+                                    "Verditius"},
+                          "Tribunal": {"Greater Alps",
                                        "Hibernia",
                                        "Iberia",
                                        "Levant",
@@ -293,7 +299,7 @@ class ArsManager:
                                        "Rome",
                                        "Stonehenge",
                                        "Thebe",
-                                       "Transylvania",]}
+                                       "Transylvania",}}
 
                 # Create a new Setting instance
                 new_setting = Setting(name=setting_name,
@@ -565,15 +571,15 @@ class ArsManager:
 
         house = tk.StringVar()
         house_box = ttk.Combobox(popup, width = 27, textvariable = house)
-        house_box['values'] = self.setting.groups["House"]
+        house_box['values'] = list(sorted(self.setting.groups["House"]))
         house_box.grid(column=1, row=2, sticky=tk.NW, padx=10)
         covenant = tk.StringVar()
         covenant_box = ttk.Combobox(popup, width = 27, textvariable = covenant)
-        covenant_box['values'] = self.setting.groups["Covenant"]
+        covenant_box['values'] = list(sorted(self.setting.groups["Covenant"]))
         covenant_box.grid(column=2, row=2, sticky=tk.NW, padx=10)
         tribunal = tk.StringVar()
         tribunal_box = ttk.Combobox(popup, width = 27, textvariable = tribunal)
-        tribunal_box['values'] = self.setting.groups["Tribunal"]
+        tribunal_box['values'] = list(sorted(self.setting.groups["Tribunal"]))
         tribunal_box.grid(column=3, row=2, sticky=tk.NW, padx=10)
 
         # Dropdown menu for character type
@@ -667,7 +673,6 @@ class ArsManager:
                         columnspan=3,
                         padx=10,
                         pady=10)
-        age_entry.focus()
         age_entry_b = ttk.Button(popup,
                                  text="Set Current Age and (Re)run Aging",
                                  command=lambda:update_all(),
@@ -828,9 +833,9 @@ class ArsManager:
             # add groups to setting if not already there
             for category, group in groups.items():
                 if category not in self.setting.groups:
-                    self.setting.groups[category] = [group]
-                if group not in self.setting.groups:
-                    self.setting.groups[category].append(group)
+                    self.setting.groups[category] = {group}
+                if group not in self.setting.groups[category]:
+                    self.setting.groups[category].add(group)
             ccvals["new_char"].name = name
             ccvals["new_char"].groups = groups
             self.setting.add_character(ccvals["new_char"])
