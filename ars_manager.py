@@ -52,15 +52,12 @@ class Setting:
 
     def __json__(self):
         # Customize serialization for the Character class
-        groups = {}
-        for category, group in self.groups.items():
-            groups[category] = list(group)
         return {
             "version": self.version,
             "name": self.name,
             "save_name": self.save_name,
             "characters": self.characters,
-            "groups": groups,
+            "groups": self.groups,
             "rng": self.rng.bit_generator.state,
             "current_year": self.current_year
         }
@@ -73,14 +70,11 @@ class Setting:
             chars[char["name"]] = Character.from_json(char)
         rng = np.random.default_rng()
         rng.bit_generator.state = serialized_data["rng"]
-        groups = {}
-        for category, group in serialized_data["groups"].items():
-            groups[category] = set(group)
         return cls(
             name=serialized_data["name"],
             save_name=serialized_data["save_name"],
             characters=chars,
-            groups=groups,
+            groups=serialized_data["groups"],
             rng=rng,
             current_year=serialized_data["current_year"]
         )
@@ -217,7 +211,7 @@ class ArsManager:
             state=tk.DISABLED
         file_menu = self.file_menu
         file_menu.entryconfigure("Save Setting", state=state)
-        file_menu.entryconfigure("Export Setting", state=state)
+        file_menu.entryconfigure("Export Characters", state=state)
         file_menu.entryconfigure("New Character", state=state)
         self.menubar.entryconfigure("Setting", state=state)
 
@@ -274,32 +268,32 @@ class ArsManager:
                 )
 
                 # default groups
-                groups = {"Covenant": set(),
-                          "House": {"Bjornaer",
-                                    "Bonisagus",
-                                    "Criamon",
-                                    "Ex Miscellanea",
-                                    "Flambeau",
-                                    "Guernicus",
-                                    "Jerbiton",
-                                    "Mercere",
-                                    "Merinita",
-                                    "Tremere",
-                                    "Tytalus",
-                                    "Verditius"},
-                          "Tribunal": {"Greater Alps",
-                                       "Hibernia",
-                                       "Iberia",
-                                       "Levant",
-                                       "Loch Leglean",
-                                       "Normandy",
-                                       "Novgorod",
-                                       "Provence",
-                                       "Rhine",
-                                       "Rome",
-                                       "Stonehenge",
-                                       "Thebe",
-                                       "Transylvania",}}
+                groups = {"Covenant": {},
+                          "House": {"Bjornaer": None,
+                                    "Bonisagus": None,
+                                    "Criamon": None,
+                                    "Ex Miscellanea": None,
+                                    "Flambeau": None,
+                                    "Guernicus": None,
+                                    "Jerbiton": None,
+                                    "Mercere": None,
+                                    "Merinita": None,
+                                    "Tremere": None,
+                                    "Tytalus": None,
+                                    "Verditius": None,},
+                          "Tribunal": {"Greater Alps": None,
+                                       "Hibernia": None,
+                                       "Iberia": None,
+                                       "Levant": None,
+                                       "Loch Leglean": None,
+                                       "Normandy": None,
+                                       "Novgorod": None,
+                                       "Provence": None,
+                                       "Rhine": None,
+                                       "Rome": None,
+                                       "Stonehenge": None,
+                                       "Thebe": None,
+                                       "Transylvania": None,}}
 
                 # Create a new Setting instance
                 new_setting = Setting(name=setting_name,
@@ -833,9 +827,9 @@ class ArsManager:
             # add groups to setting if not already there
             for category, group in groups.items():
                 if category not in self.setting.groups:
-                    self.setting.groups[category] = {group}
+                    self.setting.groups[category] = {group: None}
                 if group not in self.setting.groups[category]:
-                    self.setting.groups[category].add(group)
+                    self.setting.groups[category][group] = None
             ccvals["new_char"].name = name
             ccvals["new_char"].groups = groups
             self.setting.add_character(ccvals["new_char"])
