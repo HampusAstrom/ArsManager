@@ -155,12 +155,6 @@ class CharInfoFrame(tk.Frame):
                                             textvariable=self.characteristics_var,
                                             justify=tk.LEFT,
                                             style='Monospaced.TLabel',)
-        self.characteristics_label.grid(column=0,
-                                    row=0,
-                                    sticky=tk.NW,
-                                    columnspan=3,
-                                    padx=10,
-                                    pady=10,)
 
         self.abilities1_var = tk.StringVar()
         self.abilities1_label = ttk.Label(self,
@@ -168,57 +162,64 @@ class CharInfoFrame(tk.Frame):
                                     wraplength=400,
                                     justify=tk.LEFT,
                                     style='Monospaced.TLabel',)
-        self.abilities1_label.grid(column=0,
-                                row=1,
-                                sticky=tk.NW,
-                                padx=10,
-                                pady=10,)
         self.abilities2_var = tk.StringVar()
         self.abilities2_label = ttk.Label(self,
                                     textvariable=self.abilities2_var,
                                     wraplength=400,
                                     justify=tk.LEFT,
                                     style='Monospaced.TLabel',)
-        self.abilities2_label.grid(column=1,
-                                row=1,
-                                sticky=tk.NW,
-                                padx=10,
-                                pady=10,)
         self.abilities3_var = tk.StringVar()
         self.abilities3_label = ttk.Label(self,
                                     textvariable=self.abilities3_var,
                                     wraplength=400,
                                     justify=tk.LEFT,
                                     style='Monospaced.TLabel',)
-        self.abilities3_label.grid(column=2,
-                                row=1,
-                                sticky=tk.NW,
-                                padx=10,
-                                pady=10,)
 
         self.techniques_var = tk.StringVar()
         self.techniques_label = ttk.Label(self,
                                     textvariable=self.techniques_var,
                                     justify=tk.LEFT,
                                     style='Monospaced.TLabel',)
-        self.techniques_label.grid(column=0,
-                                row=2,
-                                sticky=tk.NW,
-                                columnspan=3,
-                                padx=10,
-                                pady=10,)
 
         self.forms_var = tk.StringVar()
         self.forms_label = ttk.Label(self,
                                 textvariable=self.forms_var,
                                 justify=tk.LEFT,
                                 style='Monospaced.TLabel',)
+
+        self.grid_rowconfigure(1, minsize=550)
+        self.characteristics_label.grid(column=0,
+                                    row=0,
+                                    sticky="nw",
+                                    columnspan=3,
+                                    padx=10,
+                                    pady=10,)
+        self.abilities1_label.grid(column=0,
+                                row=1,
+                                sticky="nw",
+                                padx=10,
+                                pady=10,)
+        self.abilities2_label.grid(column=1,
+                                row=1,
+                                sticky="nw",
+                                padx=10,
+                                pady=10,)
+        self.abilities3_label.grid(column=2,
+                                row=1,
+                                sticky="nw",
+                                padx=10,
+                                pady=10,)
+        self.techniques_label.grid(column=0,
+                                row=2,
+                                sticky="nw",
+                                columnspan=3,
+                                padx=10,
+                                pady=10,)
         self.forms_label.grid(column=0,
                             row=3,
-                            sticky=tk.NW,
+                            sticky="nw",
                             columnspan=3,
                             padx=10)
-        self.grid_rowconfigure(1, minsize=550)
 
     def update_all(self, values):
         # Update the displayed values for characteristics, abilities, etc.
@@ -603,6 +604,8 @@ class ArsManager:
         popup.title("Create New Character")
 
         popup.grid_rowconfigure(4, minsize=570)
+        #popup.grid_rowconfigure(4, weight=1)
+        #popup.grid_columnconfigure(0, weight=1)
 
         style = ttk.Style()
         style.configure('Monospaced.TLabel', font='Courier 10') # Courier
