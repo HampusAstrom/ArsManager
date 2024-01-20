@@ -145,6 +145,129 @@ class SortableTable(ttk.Treeview):
             data.append(entry)
         self.populate_table(data)
 
+class CharInfoFrame(tk.Frame):
+    def __init__(self, master, manager, *args, **kwargs):
+        super().__init__(master, *args, **kwargs)
+        self.manager = manager
+        # Labels to display the generated stats
+        self.characteristics_var = tk.StringVar()
+        self.characteristics_label = ttk.Label(self,
+                                            textvariable=self.characteristics_var,
+                                            justify=tk.LEFT,
+                                            style='Monospaced.TLabel',)
+        self.characteristics_label.grid(column=0,
+                                    row=0,
+                                    sticky=tk.NW,
+                                    columnspan=3,
+                                    padx=10,
+                                    pady=10,)
+
+        self.abilities1_var = tk.StringVar()
+        self.abilities1_label = ttk.Label(self,
+                                    textvariable=self.abilities1_var,
+                                    wraplength=400,
+                                    justify=tk.LEFT,
+                                    style='Monospaced.TLabel',)
+        self.abilities1_label.grid(column=0,
+                                row=1,
+                                sticky=tk.NW,
+                                padx=10,
+                                pady=10,)
+        self.abilities2_var = tk.StringVar()
+        self.abilities2_label = ttk.Label(self,
+                                    textvariable=self.abilities2_var,
+                                    wraplength=400,
+                                    justify=tk.LEFT,
+                                    style='Monospaced.TLabel',)
+        self.abilities2_label.grid(column=1,
+                                row=1,
+                                sticky=tk.NW,
+                                padx=10,
+                                pady=10,)
+        self.abilities3_var = tk.StringVar()
+        self.abilities3_label = ttk.Label(self,
+                                    textvariable=self.abilities3_var,
+                                    wraplength=400,
+                                    justify=tk.LEFT,
+                                    style='Monospaced.TLabel',)
+        self.abilities3_label.grid(column=2,
+                                row=1,
+                                sticky=tk.NW,
+                                padx=10,
+                                pady=10,)
+
+        self.techniques_var = tk.StringVar()
+        self.techniques_label = ttk.Label(self,
+                                    textvariable=self.techniques_var,
+                                    justify=tk.LEFT,
+                                    style='Monospaced.TLabel',)
+        self.techniques_label.grid(column=0,
+                                row=2,
+                                sticky=tk.NW,
+                                columnspan=3,
+                                padx=10,
+                                pady=10,)
+
+        self.forms_var = tk.StringVar()
+        self.forms_label = ttk.Label(self,
+                                textvariable=self.forms_var,
+                                justify=tk.LEFT,
+                                style='Monospaced.TLabel',)
+        self.forms_label.grid(column=0,
+                            row=3,
+                            sticky=tk.NW,
+                            columnspan=3,
+                            padx=10)
+        self.grid_rowconfigure(1, minsize=550)
+
+    def update_all(self, values):
+        # Update the displayed values for characteristics, abilities, etc.
+        self.characteristics_var.set(f"--Characteristics--\n"
+                                f"{d2s(values['characteristics'],sort=False)}")
+        self.techniques_var.set(f"--Techniques--\n{d2s(values['techniques'])}")
+        self.forms_var.set(f"--Forms--\n{d2s(values['forms'])}")
+        self.update_ability_display(values)
+        # lcharacteristics_var.set(f"--Characteristics--\n{d2s(ccvals['new_char'].characteristics,sort=False)}")
+        # ltechniques_var.set(f"--Techniques--\n{d2s(tech)}")
+        # lforms_var.set(f"--Forms--\n{d2s(form)}")
+
+    def update_ability_display(self, values):
+        def compose_ability_part(areas: list, abil_vis) -> str:
+            part = ""
+            for area in areas:
+                part = add_if_any_val(part, abil_vis, area)
+            return part
+
+        def add_if_any_val(part: str,
+                        abil_vis: dict,
+                        key: str) -> str:
+            if len(abil_vis[key]["Dict list"]) > 0:
+                part += f"-{key}-\n"
+                part += f'{abil_vis[key]["String"]}\n'
+            return part
+
+        abil_vis = cg.abil_order_split(values["abilities"],
+                                        self.manager.setting.ability_ordering)
+        part1 = compose_ability_part(["Core Magic",
+                                        "Core Academic",
+                                        "Social",
+                                        "Martial"],
+                                        abil_vis)
+        self.abilities1_var.set(f"--Abilities--\n{part1}")
+        part2 = compose_ability_part(["Adventure",
+                                        "Languages",
+                                        "Medicine",
+                                        "Arts and Crafting"],
+                                        abil_vis)
+        self.abilities2_var.set(part2)
+        part3 = compose_ability_part(["Magic Lores",
+                                        "Area Lores",
+                                        "Org. Lores",
+                                        "Professions",
+                                        "Law and Religion",
+                                        "Supernatural"],
+                                        abil_vis)
+        self.abilities3_var.set(part3)
 
 class ArsManager:
     def __init__(self, root):
@@ -465,77 +588,21 @@ class ArsManager:
 
         def update_all():
             values = ccvals["values"]
-            # Update the displayed values for characteristics, abilities, etc.
-            characteristics_var.set(f"--Characteristics--\n"
-                                    f"{d2s(values['characteristics'],sort=False)}")
-            techniques_var.set(f"--Techniques--\n{d2s(values['techniques'])}")
-            forms_var.set(f"--Forms--\n{d2s(values['forms'])}")
+            base_stats_frame.update_all(values)
             gen_and_age_char()
-            lcharacteristics_var.set(f"--Characteristics--\n{d2s(ccvals['new_char'].characteristics,sort=False)}")
-            update_ability_display()
-            _, arts = ccvals["new_char"].get_arts_and_abilities()
+            abilities, arts = ccvals["new_char"].get_arts_and_abilities()
             tech, form = ccvals["new_char"].separate_tech_and_form(arts)
-            ltechniques_var.set(f"--Techniques--\n{d2s(tech)}")
-            lforms_var.set(f"--Forms--\n{d2s(form)}")
-
-        def update_ability_display():
-            values = ccvals["values"]
-            abil_vis = cg.abil_order_split(values["abilities"],
-                                           self.setting.ability_ordering)
-            part1 = compose_ability_part(["Core Magic",
-                                          "Core Academic",
-                                          "Social",
-                                          "Martial"],
-                                          abil_vis)
-            abilities1_var.set(f"--Abilities--\n{part1}")
-            part2 = compose_ability_part(["Adventure",
-                                          "Languages",
-                                          "Medicine",
-                                          "Arts and Crafting"],
-                                          abil_vis)
-            abilities2_var.set(part2)
-            part3 = compose_ability_part(["Magic Lores",
-                                          "Area Lores",
-                                          "Org. Lores",
-                                          "Professions",
-                                          "Law and Religion",
-                                          "Supernatural"],
-                                          abil_vis)
-            abilities3_var.set(part3)
-            # TODO this is a bit of a hack, assumes that name, age arts
-            # and grounps don't contain any names that overlap with abilities
-            # but that would be a problem for exporting too...
-            cdict = ccvals["new_char"].to_dict()
-            labil_vis = cg.abil_order_split(cdict,
-                                           self.setting.ability_ordering,
-                                           ignore_other=True)
-            part1 = compose_ability_part(["Core Magic",
-                                          "Core Academic",
-                                          "Social",
-                                          "Martial"],
-                                          labil_vis)
-            labilities1_var.set(f"--Abilities--\n{part1}")
-            part2 = compose_ability_part(["Adventure",
-                                          "Languages",
-                                          "Medicine",
-                                          "Arts and Crafting"],
-                                          labil_vis)
-            labilities2_var.set(part2)
-            part3 = compose_ability_part(["Magic Lores",
-                                          "Area Lores",
-                                          "Org. Lores",
-                                          "Professions",
-                                          "Law and Religion",
-                                          "Supernatural"],
-                                          labil_vis)
-            labilities3_var.set(part3)
-
+            aged_values = {"characteristics": ccvals['new_char'].characteristics,
+                           "abilities": abilities,
+                           "techniques": tech,
+                           "forms": form}
+            aged_stats_frame.update_all(aged_values)
 
         # Create a new Toplevel window (popup) for character creation
         popup = tk.Toplevel(self.root)
         popup.title("Create New Character")
 
-        popup.grid_rowconfigure(4, minsize=550)
+        popup.grid_rowconfigure(4, minsize=570)
 
         style = ttk.Style()
         style.configure('Monospaced.TLabel', font='Courier 10') # Courier
@@ -576,81 +643,8 @@ class ArsManager:
         tribunal_box['values'] = list(sorted(self.setting.groups["Tribunal"]))
         tribunal_box.grid(column=3, row=2, sticky=tk.NW, padx=10)
 
-        # Dropdown menu for character type
-        # type_label = tk.Label(popup, text="Select Character Type:")
-        # type_label.pack(pady=10)
-
-        # type_options = ["Mage", "Companion", "Grog"]  # Customize based on your character types
-        # type_var = tk.StringVar(value=type_options[0])
-
-        # type_menu = tk.OptionMenu(popup, type_var, *type_options)
-        # type_menu.pack(pady=10)
-
-        # Labels to display the generated stats
-        characteristics_var = tk.StringVar()
-        characteristics_label = ttk.Label(popup,
-                                         textvariable=characteristics_var,
-                                         justify=tk.LEFT,
-                                         style='Monospaced.TLabel',)
-        characteristics_label.grid(column=1,
-                                   row=3,
-                                   sticky=tk.NW,
-                                   columnspan=3,
-                                   padx=10,
-                                   pady=10,)
-
-        abilities1_var = tk.StringVar()
-        abilities1_label = ttk.Label(popup,
-                                   textvariable=abilities1_var,
-                                   wraplength=400,
-                                   justify=tk.LEFT,
-                                   style='Monospaced.TLabel',)
-        abilities1_label.grid(column=1,
-                              row=4,
-                              sticky=tk.NW,
-                              padx=10,
-                              pady=10,)
-        abilities2_var = tk.StringVar()
-        abilities2_label = ttk.Label(popup,
-                                   textvariable=abilities2_var,
-                                   wraplength=400,
-                                   justify=tk.LEFT,
-                                   style='Monospaced.TLabel',)
-        abilities2_label.grid(column=2,
-                              row=4,
-                              sticky=tk.NW,
-                              padx=10,
-                              pady=10,)
-        abilities3_var = tk.StringVar()
-        abilities3_label = ttk.Label(popup,
-                                   textvariable=abilities3_var,
-                                   wraplength=400,
-                                   justify=tk.LEFT,
-                                   style='Monospaced.TLabel',)
-        abilities3_label.grid(column=3,
-                              row=4,
-                              sticky=tk.NW,
-                              padx=10,
-                              pady=10,)
-
-        techniques_var = tk.StringVar()
-        techniques_label = ttk.Label(popup,
-                                    textvariable=techniques_var,
-                                    justify=tk.LEFT,
-                                    style='Monospaced.TLabel',)
-        techniques_label.grid(column=1,
-                              row=5,
-                              sticky=tk.NW,
-                              columnspan=3,
-                              padx=10,
-                              pady=10,)
-
-        forms_var = tk.StringVar()
-        forms_label = ttk.Label(popup,
-                               textvariable=forms_var,
-                               justify=tk.LEFT,
-                               style='Monospaced.TLabel',)
-        forms_label.grid(column=1, row=6, sticky=tk.NW,columnspan=3, padx=10)
+        base_stats_frame = CharInfoFrame(popup, self)
+        base_stats_frame.grid(column=1, row=3, columnspan=3, rowspan=4, sticky=tk.NW,)
 
         # display char after leveling
         vseparator = ttk.Separator(popup, orient="vertical")
@@ -680,86 +674,9 @@ class ArsManager:
         age_entry_b.grid(column=7, row=2, padx=10, pady=10)
         popup.bind('<Alt-g>', lambda e:update_all())
 
-        lcharacteristics_var = tk.StringVar()
-        lcharacteristics_label = ttk.Label(popup,
-                                         textvariable=lcharacteristics_var,
-                                         justify=tk.LEFT,
-                                         style='Monospaced.TLabel',)
-        lcharacteristics_label.grid(column=5,
-                                   row=3,
-                                   sticky=tk.NW,
-                                   columnspan=3,
-                                   padx=10,
-                                   pady=10,)
+        aged_stats_frame = CharInfoFrame(popup, self)
+        aged_stats_frame.grid(column=5, row=3, columnspan=3, rowspan=4, sticky=tk.NW,)
 
-        labilities1_var = tk.StringVar()
-        labilities1_label = ttk.Label(popup,
-                                   textvariable=labilities1_var,
-                                   wraplength=400,
-                                   justify=tk.LEFT,
-                                   style='Monospaced.TLabel',)
-        labilities1_label.grid(column=5,
-                              row=4,
-                              sticky=tk.NW,
-                              padx=10,
-                              pady=10,)
-        labilities2_var = tk.StringVar()
-        labilities2_label = ttk.Label(popup,
-                                   textvariable=labilities2_var,
-                                   wraplength=400,
-                                   justify=tk.LEFT,
-                                   style='Monospaced.TLabel',)
-        labilities2_label.grid(column=6,
-                              row=4,
-                              sticky=tk.NW,
-                              padx=10,
-                              pady=10,)
-        labilities3_var = tk.StringVar()
-        labilities3_label = ttk.Label(popup,
-                                   textvariable=labilities3_var,
-                                   wraplength=400,
-                                   justify=tk.LEFT,
-                                   style='Monospaced.TLabel',)
-        labilities3_label.grid(column=7,
-                              row=4,
-                              sticky=tk.NW,
-                              padx=10,
-                              pady=10,)
-
-        ltechniques_var = tk.StringVar()
-        ltechniques_label = ttk.Label(popup,
-                                    textvariable=ltechniques_var,
-                                    justify=tk.LEFT,
-                                    style='Monospaced.TLabel',)
-        ltechniques_label.grid(column=5,
-                              row=5,
-                              sticky=tk.NW,
-                              columnspan=3,
-                              padx=10,
-                              pady=10,)
-
-        lforms_var = tk.StringVar()
-        lforms_label = ttk.Label(popup,
-                               textvariable=lforms_var,
-                               justify=tk.LEFT,
-                               style='Monospaced.TLabel',)
-        lforms_label.grid(column=5, row=6, sticky=tk.NW,columnspan=3, padx=10)
-
-        def add_if_any_val(part: str,
-                           abil_vis: dict,
-                           key: str) -> str:
-            if len(abil_vis[key]["Dict list"]) > 0:
-                part += f"-{key}-\n"
-                part += f'{abil_vis[key]["String"]}\n'
-            return part
-
-        def compose_ability_part(areas: list, abil_vis) -> str:
-            part = ""
-            for area in areas:
-                part = add_if_any_val(part, abil_vis, area)
-            return part
-
-        gen_and_age_char()
         # Update the displayed values for characteristics, abilities, etc.
         update_all()
 
