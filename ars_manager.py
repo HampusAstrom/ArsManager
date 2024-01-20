@@ -466,17 +466,17 @@ class ArsManager:
         def update_all():
             values = ccvals["values"]
             # Update the displayed values for characteristics, abilities, etc.
-            characteristics_label.config(text=f"--Characteristics--\n"
-                                     f"{d2s(values['characteristics'],sort=False)}")
-            techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
-            forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
+            characteristics_var.set(f"--Characteristics--\n"
+                                    f"{d2s(values['characteristics'],sort=False)}")
+            techniques_var.set(f"--Techniques--\n{d2s(values['techniques'])}")
+            forms_var.set(f"--Forms--\n{d2s(values['forms'])}")
             gen_and_age_char()
-            lcharacteristics_label.config(text=f"--Characteristics--\n{d2s(ccvals['new_char'].characteristics,sort=False)}")
+            lcharacteristics_var.set(f"--Characteristics--\n{d2s(ccvals['new_char'].characteristics,sort=False)}")
             update_ability_display()
             _, arts = ccvals["new_char"].get_arts_and_abilities()
             tech, form = ccvals["new_char"].separate_tech_and_form(arts)
-            ltechniques_label.config(text=f"--Techniques--\n{d2s(tech)}")
-            lforms_label.config(text=f"--Forms--\n{d2s(form)}")
+            ltechniques_var.set(f"--Techniques--\n{d2s(tech)}")
+            lforms_var.set(f"--Forms--\n{d2s(form)}")
 
         def update_ability_display():
             values = ccvals["values"]
@@ -487,13 +487,13 @@ class ArsManager:
                                           "Social",
                                           "Martial"],
                                           abil_vis)
-            abilities1_label.config(text=f"--Abilities--\n{part1}")
+            abilities1_var.set(f"--Abilities--\n{part1}")
             part2 = compose_ability_part(["Adventure",
                                           "Languages",
                                           "Medicine",
                                           "Arts and Crafting"],
                                           abil_vis)
-            abilities2_label.config(text=part2)
+            abilities2_var.set(part2)
             part3 = compose_ability_part(["Magic Lores",
                                           "Area Lores",
                                           "Org. Lores",
@@ -501,7 +501,7 @@ class ArsManager:
                                           "Law and Religion",
                                           "Supernatural"],
                                           abil_vis)
-            abilities3_label.config(text=part3)
+            abilities3_var.set(part3)
             # TODO this is a bit of a hack, assumes that name, age arts
             # and grounps don't contain any names that overlap with abilities
             # but that would be a problem for exporting too...
@@ -514,13 +514,13 @@ class ArsManager:
                                           "Social",
                                           "Martial"],
                                           labil_vis)
-            labilities1_label.config(text=f"--Abilities--\n{part1}")
+            labilities1_var.set(f"--Abilities--\n{part1}")
             part2 = compose_ability_part(["Adventure",
                                           "Languages",
                                           "Medicine",
                                           "Arts and Crafting"],
                                           labil_vis)
-            labilities2_label.config(text=part2)
+            labilities2_var.set(part2)
             part3 = compose_ability_part(["Magic Lores",
                                           "Area Lores",
                                           "Org. Lores",
@@ -528,7 +528,7 @@ class ArsManager:
                                           "Law and Religion",
                                           "Supernatural"],
                                           labil_vis)
-            labilities3_label.config(text=part3)
+            labilities3_var.set(part3)
 
 
         # Create a new Toplevel window (popup) for character creation
@@ -587,8 +587,9 @@ class ArsManager:
         # type_menu.pack(pady=10)
 
         # Labels to display the generated stats
+        characteristics_var = tk.StringVar()
         characteristics_label = ttk.Label(popup,
-                                         text="--Characteristics--",
+                                         textvariable=characteristics_var,
                                          justify=tk.LEFT,
                                          style='Monospaced.TLabel',)
         characteristics_label.grid(column=1,
@@ -598,8 +599,9 @@ class ArsManager:
                                    padx=10,
                                    pady=10,)
 
+        abilities1_var = tk.StringVar()
         abilities1_label = ttk.Label(popup,
-                                   text="Abilities:",
+                                   textvariable=abilities1_var,
                                    wraplength=400,
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
@@ -608,8 +610,9 @@ class ArsManager:
                               sticky=tk.NW,
                               padx=10,
                               pady=10,)
+        abilities2_var = tk.StringVar()
         abilities2_label = ttk.Label(popup,
-                                   text="Abilities:",
+                                   textvariable=abilities2_var,
                                    wraplength=400,
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
@@ -618,8 +621,9 @@ class ArsManager:
                               sticky=tk.NW,
                               padx=10,
                               pady=10,)
+        abilities3_var = tk.StringVar()
         abilities3_label = ttk.Label(popup,
-                                   text="Abilities:",
+                                   textvariable=abilities3_var,
                                    wraplength=400,
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
@@ -629,8 +633,9 @@ class ArsManager:
                               padx=10,
                               pady=10,)
 
+        techniques_var = tk.StringVar()
         techniques_label = ttk.Label(popup,
-                                    text="Techniques:",
+                                    textvariable=techniques_var,
                                     justify=tk.LEFT,
                                     style='Monospaced.TLabel',)
         techniques_label.grid(column=1,
@@ -640,8 +645,9 @@ class ArsManager:
                               padx=10,
                               pady=10,)
 
+        forms_var = tk.StringVar()
         forms_label = ttk.Label(popup,
-                               text="Forms:",
+                               textvariable=forms_var,
                                justify=tk.LEFT,
                                style='Monospaced.TLabel',)
         forms_label.grid(column=1, row=6, sticky=tk.NW,columnspan=3, padx=10)
@@ -674,8 +680,9 @@ class ArsManager:
         age_entry_b.grid(column=7, row=2, padx=10, pady=10)
         popup.bind('<Alt-g>', lambda e:update_all())
 
+        lcharacteristics_var = tk.StringVar()
         lcharacteristics_label = ttk.Label(popup,
-                                         text="--Characteristics--",
+                                         textvariable=lcharacteristics_var,
                                          justify=tk.LEFT,
                                          style='Monospaced.TLabel',)
         lcharacteristics_label.grid(column=5,
@@ -685,8 +692,9 @@ class ArsManager:
                                    padx=10,
                                    pady=10,)
 
+        labilities1_var = tk.StringVar()
         labilities1_label = ttk.Label(popup,
-                                   text="Abilities:",
+                                   textvariable=labilities1_var,
                                    wraplength=400,
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
@@ -695,8 +703,9 @@ class ArsManager:
                               sticky=tk.NW,
                               padx=10,
                               pady=10,)
+        labilities2_var = tk.StringVar()
         labilities2_label = ttk.Label(popup,
-                                   text="Abilities:",
+                                   textvariable=labilities2_var,
                                    wraplength=400,
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
@@ -705,8 +714,9 @@ class ArsManager:
                               sticky=tk.NW,
                               padx=10,
                               pady=10,)
+        labilities3_var = tk.StringVar()
         labilities3_label = ttk.Label(popup,
-                                   text="Abilities:",
+                                   textvariable=labilities3_var,
                                    wraplength=400,
                                    justify=tk.LEFT,
                                    style='Monospaced.TLabel',)
@@ -716,8 +726,9 @@ class ArsManager:
                               padx=10,
                               pady=10,)
 
+        ltechniques_var = tk.StringVar()
         ltechniques_label = ttk.Label(popup,
-                                    text="Techniques:",
+                                    textvariable=ltechniques_var,
                                     justify=tk.LEFT,
                                     style='Monospaced.TLabel',)
         ltechniques_label.grid(column=5,
@@ -727,8 +738,9 @@ class ArsManager:
                               padx=10,
                               pady=10,)
 
+        lforms_var = tk.StringVar()
         lforms_label = ttk.Label(popup,
-                               text="Forms:",
+                               textvariable=lforms_var,
                                justify=tk.LEFT,
                                style='Monospaced.TLabel',)
         lforms_label.grid(column=5, row=6, sticky=tk.NW,columnspan=3, padx=10)
@@ -764,8 +776,6 @@ class ArsManager:
         def gen_characteristics():
             values = ccvals["values"]
             values['characteristics'] = cg.get_characteristics_from_array()
-            characteristics_label.config(text=f"--Characteristics--\n"
-                                     f"{d2s(values['characteristics'],sort=False)}")
             update_all()
 
         def gen_abilities():
@@ -776,13 +786,11 @@ class ArsManager:
         def gen_techniques():
             values = ccvals["values"]
             values['techniques'], values['te_prios'] = cg.get_techniques_from_array()
-            techniques_label.config(text=f"--Techniques--\n{d2s(values['techniques'])}")
             update_all()
 
         def gen_forms():
             values = ccvals["values"]
             values['forms'], values['fo_prios'] = cg.get_forms_from_array()
-            forms_label.config(text=f"--Forms--\n{d2s(values['forms'])}")
             update_all()
 
         # Buttons to regenerate each section
