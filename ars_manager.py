@@ -582,9 +582,9 @@ class ArsManager:
             char =  cg.create_mage_from_gen_vals(name,
                                                  values,
                                                  char_input_year=gauntlet_year,
-                                                 current_year = self.setting.current_year,
-                                                 rel_prio_weight=0.5,
-                                                 budget=35)
+                                                 current_year = self.setting.current_year,)
+                                                 #rel_prio_weight=1,
+                                                 #budget=30)
             ccvals["new_char"] = char
 
         def update_all():

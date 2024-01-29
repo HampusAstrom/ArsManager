@@ -75,10 +75,10 @@ TECHNIQUES = ["Cr","In","Mu","Pe","Re",]
 FORMS = ["An","Aq","Au","Co","He","Ig","Im","Me","Te","Vi",]
 
 MAGIC = {"Magic Theory": 20,
-         "Latin": 2,
+         "Latin": 0.5,
          "Parma Magica": 5,
          "Classic Greek": 0.5,
-         "Artes Liberales": 3,
+         "Artes Liberales": 2,
          "Philosophiae": 2,
          "Teaching": 0.5,
          "Order of Hermes Lore": 1,
@@ -89,9 +89,9 @@ MAGIC = {"Magic Theory": 20,
          "Faerie Lore": 0.2,
          "Dominion Lore": 0.05,
          "Infernal Lore": 0.05,
-         "Concentration": 1,
-         "Finesse": 1,
-         "Penetration": 1,
+         "Concentration": 1.5,
+         "Finesse": 2,
+         "Penetration": 2,
          "Awareness": 0.3,
          }
 

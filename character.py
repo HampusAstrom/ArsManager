@@ -126,7 +126,7 @@ class Character:
                  rng: np.random.Generator = None,
                  rel_prio_weight: float = 1,
                  rel_art_xp_weight: float = 1.2,
-                 budget: int = 30,
+                 budget: int = 20,
                  chunk_mean: int = 5,
                  current_year: int = None,
                  softcapped_stats: dict = None,
