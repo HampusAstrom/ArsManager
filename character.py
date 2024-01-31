@@ -176,7 +176,10 @@ class Character:
             while cyear < year:
                 cyear += 1
                 assert cyear not in self.history
-                cstats = self._step_stats(cstats)
+                budget = self.budget
+                if self._get_age_at_year(cyear) > 50: # learn slower over 50
+                    budget = int(budget*0.75)
+                cstats = self._step_stats(cstats, budget)
                 self.history[cyear] = cstats
             assert cyear == year
             self.stats = copy.deepcopy(cstats)
@@ -187,12 +190,11 @@ class Character:
         assert years > 0
         self.set_to_year(self._current_year + years)
 
-    def _step_stats(self, prev_stats: dict) -> dict:
+    def _step_stats(self, prev_stats: dict, budget: int) -> dict:
         assert self.check_same_keys(prev_stats, self.prios)
         stats = copy.deepcopy(prev_stats)
         rng = self.rng
         off = int(self.chunk_mean/2) # default chunk offset range
-        budget = self.budget # TODO budget could depend on age later
         # build weight measure
 
         temp_stats = dict(sorted(copy.deepcopy(stats).items()))
@@ -203,9 +205,12 @@ class Character:
             if key in temp_stats and temp_stats[key].value >= cap:
                 temp_stats[key] = Ability(0)
         # adjust (most often increase) weight from current xp of arts
+        # also softcap abilities (weight from xp is capped at val 5 (75xp))
         for key, stat in temp_stats.items():
             if isinstance(stat, Art):
                 temp_stats[key].tot_xp *= self.rel_art_xp_weight
+            elif stat.tot_xp > 75:
+                temp_stats[key].tot_xp = 75 # TODO reduce more if needed, expose
         pri = [weight for key,weight in sorted(self.prios.items())]
         sts = [int(stat.tot_xp) for stat in temp_stats.values()]
         weight = self.calc_weights(np.array(sts),
@@ -241,6 +246,9 @@ class Character:
         self.current_age = self._current_year \
                            - self.char_input_year \
                            + self.char_input_age
+
+    def _get_age_at_year(self, year) -> int:
+        return year - self.char_input_year + self.char_input_age
 
     def get_arts_and_abilities(self, stats: dict = None) -> tuple[dict, dict]:
         abilities = {}
