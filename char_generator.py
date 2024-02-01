@@ -109,38 +109,36 @@ def perturb_prios(prios: dict) -> dict:
         # 0.4 < r < 0.6 remains unchanged
     return prios
 
-def get_techniques_from_array(magic_prio_factor = 10) -> dict:
+def get_techniques_from_array() -> dict:
     te = TECHNIQUES
     te_array = select_array(TECH_ARRAYS, TECH_ARRAYS_PRIO)
     techniques = assign_array(te, te_array, None, Art)
-    prios = set_technique_prios(techniques, magic_prio_factor=magic_prio_factor)
+    prios = set_technique_prios(techniques)
     return techniques, prios
 
 def set_technique_prios(techniques: dict,
-                        prios: dict = {},
-                        magic_prio_factor: float = 10) -> dict:
+                        prios: dict = {}) -> dict:
     for key, stat in techniques.items():
         if rng.random() > 0.8:
-            prios[key] = 4*magic_prio_factor
+            prios[key] = 4
         else:
-            prios[key] = 0.5*magic_prio_factor
+            prios[key] = 1
     return prios
 
-def get_forms_from_array(magic_prio_factor = 10) -> dict:
+def get_forms_from_array() -> dict:
     fo = FORMS
     fo_array = select_array(FORM_ARRAYS, FORM_ARRAYS_PRIO)
     forms = assign_array(fo, fo_array, None, Art)
-    prios = set_form_prios(forms, magic_prio_factor=magic_prio_factor)
+    prios = set_form_prios(forms)
     return forms, prios
 
 def set_form_prios(forms: dict,
-                        prios: dict = {},
-                        magic_prio_factor: float = 10) -> dict:
+                        prios: dict = {}) -> dict:
     for key, stat in forms.items():
         if rng.random() > 0.8:
-            prios[key] = 3*magic_prio_factor
+            prios[key] = 3
         else:
-            prios[key] = 0.2*magic_prio_factor
+            prios[key] = 0.5
     return prios
 
 def shift_abilities(ab_dict: dict,
@@ -332,14 +330,12 @@ def create_mage_from_gen_vals(name: str,
                                       values: dict,
                                       char_input_year: int = 1220,
                                       char_input_age: int = 25,
-                                      current_year: int = 1220,
-                                      rel_prio_weight: float = 1,
-                                      budget: int = 30,
-                                      groups: dict = {},
+                                      **kwargs,
                                       ) -> Character:
     stats = values["abilities"] | values["techniques"] | values["forms"]
     characteristics = values["characteristics"]
     prios = values["ab_prios"] | values["te_prios"] | values["fo_prios"]
+    #prios = Character.norm_prios_by_rel_weight(prios)
     return Character(name,
                     char_input_year,
                     char_input_age,
@@ -347,11 +343,8 @@ def create_mage_from_gen_vals(name: str,
                     prios,
                     characteristics,
                     rng,
-                    rel_prio_weight,
-                    groups=groups,
-                    current_year=current_year,
-                    budget = budget,
                     softcapped_stats=SOFTCAPPED_STATS,
+                    **kwargs,
                     )
 
 # generates standard age 25, just out of gauntlet mages from mostly fixed arrays

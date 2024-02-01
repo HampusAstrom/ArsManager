@@ -124,9 +124,10 @@ class Character:
                  prios: dict,
                  characteristics: dict,
                  rng: np.random.Generator = None,
-                 rel_prio_weight: float = 1,
-                 rel_art_xp_weight: float = 1.2,
-                 budget: int = 20,
+                 frac_prio2xp_weight: float = 0.5,
+                 rel_art_xp_weight: float = 2.0,
+                 frac_art_prio_weight: float = 0.85,
+                 budget: int = 25,
                  chunk_mean: int = 5,
                  current_year: int = None,
                  softcapped_stats: dict = None,
@@ -138,6 +139,7 @@ class Character:
         assert chunk_mean > 0
         assert self.check_same_keys(stats, prios)
         assert isinstance(current_year, (int,type(None)))
+        assert frac_prio2xp_weight >= 0 and frac_prio2xp_weight <= 1
         self.name = name
         # groups: organized like groups in setting type as key names in values
         self.groups = groups
@@ -146,9 +148,10 @@ class Character:
         self.char_input_age = char_input_age
         self.characteristics = characteristics
         self.rng = rng
-        self.rel_prio_weight = rel_prio_weight
+        self.frac_prio2xp_weight = frac_prio2xp_weight
         self.rel_art_xp_weight = rel_art_xp_weight
-        self.prios = prios
+        self.frac_art_prio_weight = frac_art_prio_weight
+        self.prios = self.norm_prios_by_rel_weight(prios,frac_art_prio_weight)
         self.budget = budget
         self.chunk_mean = chunk_mean
         self.stats = stats
@@ -160,6 +163,32 @@ class Character:
         if current_year is None:
             current_year = char_input_year
         self.set_to_year(current_year)
+
+    @staticmethod
+    def norm_prios_by_rel_weight(prios: dict,
+                                 frac_art_prio_weight: float=0.85) -> dict:
+        assert frac_art_prio_weight >= 0 and frac_art_prio_weight <= 1
+        arts = ["Cr","In","Mu","Pe","Re",
+                "An","Aq","Au","Co","He","Ig","Im","Me","Te","Vi",]
+        sum_abilities = 0
+        sum_arts = 0
+        for name, p in prios.items():
+            if name in arts:
+                sum_arts += p
+            else:
+                sum_abilities += p
+
+        if sum_arts <= 0:
+            sum_arts = 1
+        if sum_abilities <= 0:
+            sum_abilities = 1
+        for name, p in prios.items():
+            if name in arts:
+                prios[name] = (prios[name]/sum_arts)*frac_art_prio_weight
+            else:
+                prios[name] = (prios[name]/sum_abilities)* \
+                              (1-frac_art_prio_weight)
+        return prios
 
     @staticmethod
     def check_same_keys(dict1, dict2):
@@ -215,7 +244,7 @@ class Character:
         sts = [int(stat.tot_xp) for stat in temp_stats.values()]
         weight = self.calc_weights(np.array(sts),
                                    np.array(pri),
-                                   self.rel_prio_weight)
+                                   self.frac_prio2xp_weight)
         # start adding xp
         while budget > 0:
             # xp to add
@@ -231,11 +260,11 @@ class Character:
         return stats
 
     @staticmethod
-    def calc_weights(sts, pri, rel_prio_weight = 1):
+    def calc_weights(sts, pri, frac_prio2xp_weight = 0.5):
         sts = sts / np.linalg.norm(sts)
         pri = pri / np.linalg.norm(pri)
         # TODO possilly apply function to pri before adding
-        w = np.add(sts, pri*rel_prio_weight)
+        w = np.add(sts*(1-frac_prio2xp_weight), pri*frac_prio2xp_weight)
         return w
 
     def get_last_year(self) -> tuple[int, dict]:
@@ -315,8 +344,9 @@ class Character:
             "arts": arts,
             "prios": self.prios,
             # "rng": self.rng.bit_generator.state,
-            "rel_prio_weight": self.rel_prio_weight,
+            "frac_prio2xp_weight": self.frac_prio2xp_weight,
             "rel_art_xp_weight": self.rel_art_xp_weight,
+            "frac_art_prio_weight": self.frac_art_prio_weight,
             "budget": self.budget,
             "chunk_mean": self.chunk_mean,
             "current_year": self._current_year,
@@ -344,8 +374,9 @@ class Character:
             stats=stats,
             prios=serialized_data["prios"],
             characteristics=serialized_data["characteristics"],
-            rel_prio_weight=serialized_data["rel_prio_weight"],
+            frac_prio2xp_weight=serialized_data["frac_prio2xp_weight"],
             rel_art_xp_weight=serialized_data["rel_art_xp_weight"],
+            frac_art_prio_weight=serialized_data["frac_art_prio_weight"],
             budget=serialized_data["budget"],
             chunk_mean=serialized_data["chunk_mean"],
             softcapped_stats=serialized_data["softcapped_stats"],

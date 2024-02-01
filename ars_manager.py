@@ -29,7 +29,7 @@ class Setting:
                  rng = None,
                  current_year: int = 1220,
                  ) -> None:
-        self.version = 0.1 # used to track how json save looks like and handle updates
+        self.version = 0.2 # used to track how json save looks like and handle updates
         self.name = name
         self.save_name = save_name
         self.characters = characters # contains all setting characters
