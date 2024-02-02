@@ -148,6 +148,20 @@ class Setting:
         headers += list(self.groups.keys())
         return headers
 
+    def set_xp_options(self, p2x, art_xp, f_art_prio, budget, reage=False):
+        self.frac_prio2xp_weight = p2x
+        self.rel_art_xp_weight = art_xp
+        self.frac_art_prio_weight = f_art_prio
+        self.budget = budget
+        if reage:
+            for char in self.characters.values():
+                char.frac_prio2xp_weight = p2x
+                char.rel_art_xp_weight = art_xp
+                char.frac_art_prio_weight = f_art_prio
+                char.budget = budget
+                char.reage()
+
+
 class SortableTable(ttk.Treeview):
     def __init__(self, parent, columns, characters, *args, **kwargs):
         ttk.Treeview.__init__(self, parent, columns=columns, *args, **kwargs)
@@ -640,6 +654,17 @@ class ArsManager:
 
         def change_xp_options():
             popup2 = tk.Toplevel(self.root)
+            def set_and_reage():
+                set_xp_options(reage=True)
+            def set_xp_options(reage = False):
+                self.setting.set_xp_options(p2x=frac_prio2xp_weight_var.get(),
+                                            art_xp=rel_art_xp_weight_var.get(),
+                                            f_art_prio=frac_art_prio_weight_var.get(),
+                                            budget=budget_var.get(),
+                                            reage=reage)
+                popup2.destroy()
+                self.update_table()
+
             popup2.title("Set xp options for this character")
 
             frac_prio2xp_weight_text = "Fraction of selection weight given to "
@@ -698,10 +723,18 @@ class ArsManager:
                                 padx=10,
                                 pady=10)
 
-            # add_b = ttk.Button(popup2,text="Close",
-            #                command=lambda:popup2.destroy)
-            # add_b.grid(column=1, row=3, padx=10, pady=10, sticky=tk.NW, columnspan=2)
-            # popup.bind('<Return>', lambda e:popup2.destroy)
+            b_text = "Set for all current and future characters"
+            b_text += "and re-age all characters"
+            ra_b = ttk.Button(popup2,text=b_text,
+                           command=lambda:set_and_reage())
+            ra_b.grid(column=0, row=4, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+            set_b = ttk.Button(popup2,text="Set for this and future characters",
+                           command=lambda:set_xp_options())
+            set_b.grid(column=1, row=4, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+            close_b = ttk.Button(popup2,text="Set for this character",
+                           command=lambda:popup2.destroy())
+            close_b.grid(column=3, row=4, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+            popup2.bind('<Return>', lambda e:popup2.destroy())
             # TODO for now these values actually change immediately
             # not when pushing button...
 

@@ -418,6 +418,9 @@ class Character:
                 entry.append("")
         return entry, n2char
 
+    def reage(self):
+        self.history = {self.char_input_year: copy.deepcopy(self.stats)}
+        self.set_to_year(self._current_year)
 
     # TODO add method for renaming ability (and fixing it through history)
 
