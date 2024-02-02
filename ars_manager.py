@@ -34,7 +34,7 @@ class Setting:
                  frac_art_prio_weight: float = None,
                  budget: int = None,
                  ) -> None:
-        self.version = 0.2 # used to track how json save looks like and handle updates
+        self.version = 0.3 # used to track how json save looks like and handle updates
         self.name = name
         self.save_name = save_name
         self.characters = characters # contains all setting characters
