@@ -10,6 +10,7 @@ from functools import partial
 import copy
 import lists_and_data
 import csv
+import inspect
 
 def wrapped_default(self, obj):
     return getattr(obj.__class__, "__json__", wrapped_default.default)(obj)
@@ -28,6 +29,10 @@ class Setting:
                  groups: dict = {},
                  rng = None,
                  current_year: int = 1220,
+                 frac_prio2xp_weight: float = None,
+                 rel_art_xp_weight: float = None,
+                 frac_art_prio_weight: float = None,
+                 budget: int = None,
                  ) -> None:
         self.version = 0.2 # used to track how json save looks like and handle updates
         self.name = name
@@ -47,6 +52,24 @@ class Setting:
             self.rng = np.random.default_rng()
         else:
             self.rng = rng
+        d_char_v = inspect.signature(Character.__init__).parameters
+        if frac_prio2xp_weight is None:
+            self.frac_prio2xp_weight = d_char_v["frac_prio2xp_weight"].default
+        else:
+            self.frac_prio2xp_weight = frac_prio2xp_weight
+        if rel_art_xp_weight is None:
+            self.rel_art_xp_weight = d_char_v["rel_art_xp_weight"].default
+        else:
+            self.rel_art_xp_weight = rel_art_xp_weight
+        if frac_art_prio_weight is None:
+            self.frac_art_prio_weight = d_char_v["frac_art_prio_weight"].default
+        else:
+            self.frac_art_prio_weight = frac_art_prio_weight
+        if budget is None:
+            self.budget = d_char_v["budget"].default
+        else:
+            self.budget = budget
+
         for _, char in self.characters.items():
             char.rng = self.rng
 
@@ -59,7 +82,11 @@ class Setting:
             "characters": self.characters,
             "groups": self.groups,
             "rng": self.rng.bit_generator.state,
-            "current_year": self.current_year
+            "current_year": self.current_year,
+            "frac_prio2xp_weight": self.frac_prio2xp_weight,
+            "rel_art_xp_weight": self.rel_art_xp_weight,
+            "frac_art_prio_weight": self.frac_art_prio_weight,
+            "budget": self.budget,
         }
 
     @classmethod
@@ -76,7 +103,11 @@ class Setting:
             characters=chars,
             groups=serialized_data["groups"],
             rng=rng,
-            current_year=serialized_data["current_year"]
+            current_year=serialized_data["current_year"],
+            frac_prio2xp_weight=serialized_data["frac_prio2xp_weight"],
+            rel_art_xp_weight=serialized_data["rel_art_xp_weight"],
+            frac_art_prio_weight=serialized_data["frac_art_prio_weight"],
+            budget=serialized_data["budget"],
         )
 
     def add_character(self,
@@ -571,6 +602,11 @@ class ArsManager:
         ccvals["values"] = cg.gen_mage_values()
         age_entry_var = tk.IntVar(value=25)
         ccvals["age_var"] = age_entry_var
+        frac_prio2xp_weight_var = tk.DoubleVar(value=self.setting.frac_prio2xp_weight)
+        rel_art_xp_weight_var = tk.DoubleVar(value=self.setting.rel_art_xp_weight)
+        frac_art_prio_weight_var = tk.DoubleVar(value=self.setting.frac_art_prio_weight)
+        budget_var = tk.IntVar(value=self.setting.budget)
+
         def gen_and_age_char(name: str = "temp_to_be_replaced",):
             values = ccvals["values"]
             age = age_entry_var.get()
@@ -579,12 +615,15 @@ class ArsManager:
                                           "Character cannot be younger than gauntlet age at 25!")
                 return  # Don't proceed further if the name is empty
             gauntlet_year = self.setting.current_year - age + 25
-            char =  cg.create_mage_from_gen_vals(name,
-                                                 values,
-                                                 char_input_year=gauntlet_year,
-                                                 current_year = self.setting.current_year,)
-                                                 #rel_prio_weight=1,
-                                                 #budget=30)
+            char =  cg.create_mage_from_gen_vals(
+                        name,
+                        values,
+                        char_input_year=gauntlet_year,
+                        current_year = self.setting.current_year,
+                        frac_prio2xp_weight = frac_prio2xp_weight_var.get(),
+                        rel_art_xp_weight = rel_art_xp_weight_var.get(),
+                        frac_art_prio_weight = frac_art_prio_weight_var.get(),
+                        budget = budget_var.get())
             ccvals["new_char"] = char
 
         def update_all():
@@ -599,9 +638,88 @@ class ArsManager:
                            "forms": form}
             aged_stats_frame.update_all(aged_values)
 
+        def change_xp_options():
+            popup2 = tk.Toplevel(self.root)
+            popup2.title("Set xp options for this character")
+
+            frac_prio2xp_weight_text = "Fraction of selection weight given to "
+            frac_prio2xp_weight_text += "priorities set at character creation vs\n"
+            frac_prio2xp_weight_text += "doubling down on existing xp in stats. "
+            frac_prio2xp_weight_text += "0-1 with 0 being no prio, only increase\n"
+            frac_prio2xp_weight_text += "stats that already have xp proportial to "
+            frac_prio2xp_weight_text += "current xp and 1 the reverse."
+            frac_prio2xp_weight_label = ttk.Label(popup2,
+                              text=frac_prio2xp_weight_text)
+            frac_prio2xp_weight_label.grid(column=0, row=0, sticky=tk.NW, padx=10, pady=10)
+            frac_prio2xp_weight_entry = ttk.Entry(popup2, textvariable = frac_prio2xp_weight_var)
+            frac_prio2xp_weight_entry.grid(column=1,
+                                            row=0,
+                                            sticky=tk.NW,
+                                            padx=10,
+                                            pady=10)
+
+            rel_art_xp_weight_text = "Multiplicative factor on how highly art "
+            rel_art_xp_weight_text += "xp should be valued for xp\nallocation "
+            rel_art_xp_weight_text += "in relation to ability xp. >= 0 higher "
+            rel_art_xp_weight_text += "means that art xp is valued more."
+            rel_art_xp_weight_label = ttk.Label(popup2,
+                              text=rel_art_xp_weight_text)
+            rel_art_xp_weight_label.grid(column=0, row=1, sticky=tk.NW, padx=10, pady=10)
+            rel_art_xp_weight_entry = ttk.Entry(popup2, textvariable = rel_art_xp_weight_var)
+            rel_art_xp_weight_entry.grid(column=1,
+                                            row=1,
+                                            sticky=tk.NW,
+                                            padx=10,
+                                            pady=10)
+
+            frac_art_prio_weight_text = "Fraction of the priority set at "
+            frac_art_prio_weight_text += "at character creation to be assigned "
+            frac_art_prio_weight_text += "to arts vs\nabilities collectively. 0-1 "
+            frac_art_prio_weight_text += "with 0 meaning arts get no priority."
+            frac_art_prio_weight_label = ttk.Label(popup2,
+                              text=frac_art_prio_weight_text)
+            frac_art_prio_weight_label.grid(column=0, row=2, sticky=tk.NW, padx=10, pady=10)
+            frac_art_prio_weight_entry = ttk.Entry(popup2, textvariable = frac_art_prio_weight_var)
+            frac_art_prio_weight_entry.grid(column=1,
+                                            row=2,
+                                            sticky=tk.NW,
+                                            padx=10,
+                                            pady=10)
+
+            budget_text = "Xp budget per year to allocate to arts and abilities. "
+            budget_text += "It reduces by 25%% at the age of 50."
+            budget_label = ttk.Label(popup2,
+                              text=budget_text)
+            budget_label.grid(column=0, row=3, sticky=tk.NW, padx=10, pady=10)
+            budget_entry = ttk.Entry(popup2, textvariable = budget_var)
+            budget_entry.grid(column=1,
+                                row=3,
+                                sticky=tk.NW,
+                                padx=10,
+                                pady=10)
+
+            # add_b = ttk.Button(popup2,text="Close",
+            #                command=lambda:popup2.destroy)
+            # add_b.grid(column=1, row=3, padx=10, pady=10, sticky=tk.NW, columnspan=2)
+            # popup.bind('<Return>', lambda e:popup2.destroy)
+            # TODO for now these values actually change immediately
+            # not when pushing button...
+
         # Create a new Toplevel window (popup) for character creation
         popup = tk.Toplevel(self.root)
         popup.title("Create New Character")
+
+        menubar = tk.Menu(popup)
+        char_gen_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Options",
+                                 menu=char_gen_menu,
+                                 underline=0)
+        char_gen_menu.bind("<Alt-o>", lambda e:char_gen_menu.invoke(0))
+        char_gen_menu.add_command(label="Change Xp Options",
+                                 command=change_xp_options,
+                                 underline=7)
+        char_gen_menu.bind("<Alt-x>", lambda e:change_xp_options)
+        popup.configure(menu=menubar)
 
         popup.grid_rowconfigure(4, minsize=570)
         #popup.grid_rowconfigure(4, weight=1)
@@ -653,7 +771,7 @@ class ArsManager:
         vseparator = ttk.Separator(popup, orient="vertical")
         vseparator.grid(column=4, row=0, rowspan=7, sticky='ns')
 
-        older_label = ttk.Label(popup, text="Here are the stats the character"
+        older_label = ttk.Label(popup, text="Here are the stats the character "
                                             "will have at the current year")
         older_label.grid(column=5, row=0, rowspan=3, sticky=tk.NW, padx=10, pady=10)
 
