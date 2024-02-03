@@ -194,6 +194,9 @@ class CharInfoFrame(tk.Frame):
     def __init__(self, master, manager, *args, **kwargs):
         super().__init__(master, *args, **kwargs)
         self.manager = manager
+
+        style = ttk.Style()
+        style.configure('Monospaced.TLabel', font='Courier 10') # Courier
         # Labels to display the generated stats
         self.characteristics_var = tk.StringVar()
         self.characteristics_label = ttk.Label(self,
@@ -328,6 +331,7 @@ class ArsManager:
         self.create_setting_menu()
         self.enable_setting_menus(initiated=False)
         self.create_table()
+        self.root.bind("<Double-1>", self.OnDoubleClick)
 
     def create_setting_menu(self):
         setting_menu = tk.Menu(self.menubar, tearoff=0)
@@ -402,6 +406,26 @@ class ArsManager:
             self.tree.column(col, width=100, anchor="center")
 
         self.tree.pack(expand=True, fill="both")
+
+    def OnDoubleClick(self, event):
+        item = self.tree.identify('item',event.x,event.y)
+        name = self.tree.item(item, 'values')[0]
+        char = self.setting.characters[name]
+        popup = tk.Toplevel(self.root)
+        popup.geometry('750x750')
+        popup.title(name)
+        # TODO add age, groups and possibly other things to popup
+        stats_frame = CharInfoFrame(popup, self)
+        stats_frame.grid(column=0, row=0, columnspan=3, rowspan=4, sticky=tk.NW,)
+        abilities, arts = char.get_arts_and_abilities()
+        tech, form = char.separate_tech_and_form(arts)
+        aged_values = {"characteristics": char.characteristics,
+                        "abilities": abilities,
+                        "techniques": tech,
+                        "forms": form}
+        stats_frame.update_all(aged_values)
+        # TODO move this to an update funciton and track a list of popups/frames
+        # so we can update this too when calling update_table()
 
     def save_setting(self):
         if self.setting.save_name:
