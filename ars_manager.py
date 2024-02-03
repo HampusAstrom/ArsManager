@@ -324,6 +324,7 @@ class ArsManager:
         self.root.geometry('1000x500')
         self.root.title("Ars Manager")
         self.setting = None # load of create setting before anything else
+        self.open_chars = {}
 
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
@@ -331,7 +332,7 @@ class ArsManager:
         self.create_setting_menu()
         self.enable_setting_menus(initiated=False)
         self.create_table()
-        self.root.bind("<Double-1>", self.OnDoubleClick)
+        self.root.bind("<Double-1>", self.on_double_click)
 
     def create_setting_menu(self):
         setting_menu = tk.Menu(self.menubar, tearoff=0)
@@ -407,7 +408,7 @@ class ArsManager:
 
         self.tree.pack(expand=True, fill="both")
 
-    def OnDoubleClick(self, event):
+    def on_double_click(self, event):
         item = self.tree.identify('item',event.x,event.y)
         name = self.tree.item(item, 'values')[0]
         char = self.setting.characters[name]
@@ -415,17 +416,21 @@ class ArsManager:
         popup.geometry('750x750')
         popup.title(name)
         # TODO add age, groups and possibly other things to popup
-        stats_frame = CharInfoFrame(popup, self)
-        stats_frame.grid(column=0, row=0, columnspan=3, rowspan=4, sticky=tk.NW,)
-        abilities, arts = char.get_arts_and_abilities()
-        tech, form = char.separate_tech_and_form(arts)
-        aged_values = {"characteristics": char.characteristics,
+        popup.stats_frame = CharInfoFrame(popup, self)
+        popup.stats_frame.grid(column=0, row=0, columnspan=3, rowspan=4, sticky=tk.NW,)
+        popup.char = char
+        self.update_char_popup(popup)
+        # TODO could this dict below be a memory leak/break if they are opened and then closed?
+        self.open_chars[name] = popup
+
+    def update_char_popup(self, popup):
+        abilities, arts = popup.char.get_arts_and_abilities()
+        tech, form = popup.char.separate_tech_and_form(arts)
+        aged_values = {"characteristics": popup.char.characteristics,
                         "abilities": abilities,
                         "techniques": tech,
                         "forms": form}
-        stats_frame.update_all(aged_values)
-        # TODO move this to an update funciton and track a list of popups/frames
-        # so we can update this too when calling update_table()
+        popup.stats_frame.update_all(aged_values)
 
     def save_setting(self):
         if self.setting.save_name:
@@ -543,6 +548,8 @@ class ArsManager:
 
         # Populate the table with character data
         self.tree.format_and_populate(self.setting.characters)
+        for popup in self.open_chars.values():
+            self.update_char_popup(popup)
 
     def export_characters(self):
         file_path = filedialog.asksaveasfilename(defaultextension=".csv",
