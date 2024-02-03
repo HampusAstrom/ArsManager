@@ -104,10 +104,10 @@ class Setting:
             groups=serialized_data["groups"],
             rng=rng,
             current_year=serialized_data["current_year"],
-            frac_prio2xp_weight=serialized_data["frac_prio2xp_weight"],
-            rel_art_xp_weight=serialized_data["rel_art_xp_weight"],
-            frac_art_prio_weight=serialized_data["frac_art_prio_weight"],
-            budget=serialized_data["budget"],
+            frac_prio2xp_weight=serialized_data.get("frac_prio2xp_weight"),
+            rel_art_xp_weight=serialized_data.get("rel_art_xp_weight"),
+            frac_art_prio_weight=serialized_data.get("frac_art_prio_weight"),
+            budget=serialized_data.get("budget"),
         )
 
     def add_character(self,
