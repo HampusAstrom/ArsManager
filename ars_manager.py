@@ -195,8 +195,6 @@ class CharInfoFrame(tk.Frame):
         super().__init__(master, *args, **kwargs)
         self.manager = manager
 
-        style = ttk.Style()
-        style.configure('Monospaced.TLabel', font='Courier 10') # Courier
         # Labels to display the generated stats
         self.characteristics_var = tk.StringVar()
         self.characteristics_label = ttk.Label(self,
@@ -326,6 +324,9 @@ class ArsManager:
         self.setting = None # load of create setting before anything else
         self.open_chars = {}
 
+        style = ttk.Style()
+        style.configure('Monospaced.TLabel', font='Courier 10') # Courier
+
         self.menubar = tk.Menu(self.root)
         self.root.config(menu=self.menubar)
         self.create_file_menu()
@@ -415,15 +416,45 @@ class ArsManager:
         popup = tk.Toplevel(self.root)
         popup.geometry('750x750')
         popup.title(name)
-        # TODO add age, groups and possibly other things to popup
+
+        popup.name_var = tk.StringVar()
+        popup.age_var = tk.StringVar()
+        popup.house_var = tk.StringVar()
+        popup.covenant_var = tk.StringVar()
+        popup.tribunal_var = tk.StringVar()
+        popup.name_label = ttk.Label(popup,
+                                     textvariable=popup.name_var,
+                                     style='Monospaced.TLabel',)
+        popup.age_label = ttk.Label(popup,
+                                    textvariable=popup.age_var,
+                                    style='Monospaced.TLabel',)
+        popup.house_label = ttk.Label(popup,
+                                      textvariable=popup.house_var,
+                                      style='Monospaced.TLabel',)
+        popup.covenant_label = ttk.Label(popup,
+                                         textvariable=popup.covenant_var,
+                                         style='Monospaced.TLabel',)
+        popup.tribunal_label = ttk.Label(popup,
+                                         textvariable=popup.tribunal_var,
+                                         style='Monospaced.TLabel',)
         popup.stats_frame = CharInfoFrame(popup, self)
-        popup.stats_frame.grid(column=0, row=0, columnspan=3, rowspan=4, sticky=tk.NW,)
+        popup.name_label.grid(column=0, row=0, sticky=tk.NW, padx=10)
+        popup.age_label.grid(column=2, row=0, sticky=tk.NW, padx=10)
+        popup.house_label.grid(column=0, row=1, sticky=tk.NW, padx=10)
+        popup.covenant_label.grid(column=1, row=1, sticky=tk.NW, padx=10)
+        popup.tribunal_label.grid(column=2, row=1, sticky=tk.NW, padx=10)
+        popup.stats_frame.grid(column=0, row=2, columnspan=3, rowspan=4, sticky=tk.NW,)
         popup.char = char
         self.update_char_popup(popup)
         # TODO could this dict below be a memory leak/break if they are opened and then closed?
         self.open_chars[name] = popup
 
     def update_char_popup(self, popup):
+        popup.name_var.set(popup.char.name)
+        popup.age_var.set(f"Age: {popup.char.current_age}")
+        popup.house_var.set(f"House: {popup.char.groups['House']}")
+        popup.covenant_var.set(f"Covenant: {popup.char.groups['Covenant']}")
+        popup.tribunal_var.set(f"Tribunal: {popup.char.groups['Tribunal']}")
         abilities, arts = popup.char.get_arts_and_abilities()
         tech, form = popup.char.separate_tech_and_form(arts)
         aged_values = {"characteristics": popup.char.characteristics,
@@ -788,9 +819,6 @@ class ArsManager:
         popup.grid_rowconfigure(4, minsize=570)
         #popup.grid_rowconfigure(4, weight=1)
         #popup.grid_columnconfigure(0, weight=1)
-
-        style = ttk.Style()
-        style.configure('Monospaced.TLabel', font='Courier 10') # Courier
 
         # Label and Entry for the user to input the character name
         name_label = ttk.Label(popup, text="Enter Character Name:")
