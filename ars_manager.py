@@ -20,8 +20,10 @@ wrapped_default.default = json.JSONEncoder().default
 json.JSONEncoder.original_default = json.JSONEncoder.default
 json.JSONEncoder.default = wrapped_default
 
-class Setting:
+def swap_dict_values(dct, a, b):
+    dct[a], dct[b] = dct[b], dct[a]
 
+class Setting:
     def __init__(self,
                  name: str,
                  save_name: str,
@@ -33,8 +35,10 @@ class Setting:
                  rel_art_xp_weight: float = None,
                  frac_art_prio_weight: float = None,
                  budget: int = None,
+                 ability_ordering: dict = None,
+                 softcapped_stats: dict = None,
                  ) -> None:
-        self.version = 0.3 # used to track how json save looks like and handle updates
+        self.version = 0.4 # used to track how json save looks like and handle updates
         self.name = name
         self.save_name = save_name
         self.characters = characters # contains all setting characters
@@ -47,7 +51,10 @@ class Setting:
         self.groups = groups
         self.rng = np.random.default_rng()
         self.current_year = current_year
-        self.ability_ordering = copy.deepcopy(lists_and_data.DEFAULT_ABIL_ORDERING)
+        if ability_ordering is None:
+            self.ability_ordering = copy.deepcopy(lists_and_data.DEFAULT_ABIL_ORDERING)
+        else:
+            self.ability_ordering = ability_ordering
         if rng is None:
             self.rng = np.random.default_rng()
         else:
@@ -69,6 +76,10 @@ class Setting:
             self.budget = d_char_v["budget"].default
         else:
             self.budget = budget
+        if softcapped_stats is None: # TODO also make sure all languages are there
+            self.softcapped_stats = copy.deepcopy(lists_and_data.SOFTCAPPED_STATS)
+        else:
+            self.softcapped_stats = softcapped_stats
 
         for _, char in self.characters.items():
             char.rng = self.rng
@@ -87,6 +98,8 @@ class Setting:
             "rel_art_xp_weight": self.rel_art_xp_weight,
             "frac_art_prio_weight": self.frac_art_prio_weight,
             "budget": self.budget,
+            "ability_ordering": self.ability_ordering,
+            "softcapped_stats": self.softcapped_stats,
         }
 
     @classmethod
@@ -108,6 +121,8 @@ class Setting:
             rel_art_xp_weight=serialized_data.get("rel_art_xp_weight"),
             frac_art_prio_weight=serialized_data.get("frac_art_prio_weight"),
             budget=serialized_data.get("budget"),
+            ability_ordering=serialized_data.get("ability_ordering"),
+            softcapped_stats=serialized_data.get("softcapped_stats"),
         )
 
     def add_character(self,
@@ -161,6 +176,27 @@ class Setting:
                 char.budget = budget
                 char.reage()
 
+    def find_ordering_of_ability(self, ab_name):
+        for cat, values in self.ability_ordering.items():
+            if ab_name in values:
+                return cat
+        return "Other"
+
+    def get_all_abilities(self, dict_to_check=None):
+        if dict_to_check is None:
+            dict_to_check = self.ability_ordering
+        ret = []
+        for cat, values in dict_to_check.items():
+            ret += values
+        return ret
+
+    def sort_abilies_by_ordering(self, to_sort):
+        ret = []
+        for category in self.ability_ordering.values():
+            for name in category:
+                if name in to_sort:
+                    ret.append(name)
+        return ret
 
 class SortableTable(ttk.Treeview):
     def __init__(self, parent, columns, characters, *args, **kwargs):
@@ -312,7 +348,8 @@ class CharInfoFrame(tk.Frame):
                                         "Org. Lores",
                                         "Professions",
                                         "Law and Religion",
-                                        "Supernatural"],
+                                        "Supernatural",
+                                        "Other"],
                                         abil_vis)
         self.abilities3_var.set(part3)
 
@@ -420,6 +457,19 @@ class ArsManager:
         popup = tk.Toplevel(self.root)
         popup.geometry('750x750')
         popup.title(name)
+        popup.focus_set()
+
+        menubar = tk.Menu(popup)
+        char_gen_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Edit",
+                                 menu=char_gen_menu,
+                                 underline=0)
+        char_gen_menu.bind("<Alt-e>", lambda e:char_gen_menu.invoke(0))
+        char_gen_menu.add_command(label="Swap stats",
+                                 command=lambda:self.swap_char_stats_popup(name),
+                                 underline=0)
+        char_gen_menu.bind("<Alt-s>", lambda e:self.swap_char_stats_popup(name))
+        popup.configure(menu=menubar)
 
         popup.name_var = tk.StringVar()
         popup.age_var = tk.StringVar()
@@ -466,6 +516,160 @@ class ArsManager:
                         "techniques": tech,
                         "forms": form}
         popup.stats_frame.update_all(aged_values)
+
+    def swap_char_stats_popup(self, name,):
+        char = self.setting.characters[name]
+        popup = tk.Toplevel(self.root)
+        popup.title(f"Swap xp and prio of stats for {name}")
+        popup.focus_set()
+        popup.grab_set()
+
+        types = ["Characteristics", "Abilities", "Arts"]
+        type_label = ttk.Label(popup, text="Select type of stat to swap:")
+        type_var = tk.StringVar()
+        type_box = ttk.Combobox(popup, width = 27, state="readonly")
+        type_box["values"] = types
+        type_box["textvariable"] = type_var
+
+        from_label = ttk.Label(popup, text="Select existing stat to replace/swap:")
+        from_var = tk.StringVar()
+        from_box = ttk.Combobox(popup, width = 27, state="readonly")
+        from_box["textvariable"] = from_var
+
+        to_label = ttk.Label(popup, text="Select stat to swap it with (can be new):")
+        to_var = tk.StringVar()
+        to_box = ttk.Combobox(popup, width = 27, state="readonly")
+        to_box["textvariable"] = to_var
+
+        cat_text = "If *new* ability, what category should it be shown in:"
+        cat_label = ttk.Label(popup, text=cat_text)
+        cat_var = tk.StringVar()
+        cat_box = ttk.Combobox(popup, width = 27, state="disabled")
+        cat_box["textvariable"] = cat_var
+
+        def reset(close=False, start=False):
+            ab, popup.arts = char.get_arts_and_abilities()
+            popup.abilities = self.setting.sort_abilies_by_ordering(ab)
+            popup.characteristics = char.characteristics
+            popup.all_abilities = self.setting.get_all_abilities()
+            self.update_table()
+            if not start: # if not we have made changes to character to save
+                self.save_setting()
+            if close:
+                popup.destroy()
+            else:
+                type_var.set("")
+                from_box["values"] = []
+                to_box["values"] = []
+                cat_box["state"] = "disabled"
+                from_var.set("")
+                to_var.set("")
+                cat_var.set("")
+
+        def populate_boxes(self):
+            tpe = type_var.get()
+            if tpe == "Characteristics":
+                vals = list(popup.characteristics.keys())
+            elif tpe == "Abilities":
+                vals = popup.abilities
+            else:
+                vals = list(popup.arts.keys())
+            from_box["values"] = vals
+            to_box["values"] = vals
+
+            from_var.set(vals[0])
+            to_var.set(vals[0])
+
+            if tpe == "Abilities":
+                to_box["values"] = popup.all_abilities
+                to_box["state"] = "normal"
+            else:
+                to_box["state"] = "readonly"
+
+            cat_box["state"] = "disabled"
+            cat_var.set("")
+
+        def activate_cat_box():
+            if type_var.get() == "Abilities" and \
+                to_var.get() not in popup.all_abilities:
+                cat_box["state"] = "readonly"
+                cat_box["values"] = list(self.setting.ability_ordering.keys())
+                cat_var.set(self.setting.find_ordering_of_ability(from_var.get()))
+
+        def apply(close=False):
+            if type_var.get() == "":
+                # just close
+                return reset(close)
+            if type_var.get() == "Characteristics":
+                swap_dict_values(char.characteristics, to_var.get(), from_var.get())
+                return reset(close)
+            # if both exists this is easy
+            if to_var.get() in char.stats:
+                swap_dict_values(char.stats, to_var.get(), from_var.get())
+                swap_dict_values(char.prios, to_var.get(), from_var.get())
+                for ystats in char.history.values():
+                    swap_dict_values(ystats, to_var.get(), from_var.get())
+                return reset(close)
+            # handle the case where we have a new ability name
+            # at least for the character, maybe setting too
+            char.stats[to_var.get()] = char.stats.pop(from_var.get())
+            char.prios[to_var.get()] = char.prios.pop(from_var.get())
+            for ystats in char.history.values():
+                    ystats[to_var.get()] = ystats.pop(from_var.get())
+            # update default list of abilities in setting.ability_ordering
+            # if we remove the last instance of the skill
+            default = lists_and_data.DEFAULT_ABIL_ORDERING
+            base_list = self.setting.get_all_abilities(default)
+            from_still_exists = from_var.get() in base_list
+            for c in self.setting.characters.values():
+                if from_var.get() in c.stats:
+                    from_still_exists = True
+                    break
+            if not from_still_exists:
+                for cat, values in self.setting.ability_ordering.items():
+                    if from_var.get() in values:
+                        self.setting.ability_ordering[cat].remove(from_var.get())
+                if from_var.get() in self.setting.softcapped_stats:
+                    self.setting.softcapped_stats.pop(from_var.get())
+                    for c in self.setting.characters.values():
+                        c.softcapped_stats.pop(from_var.get())
+            if cat_var.get() == "":
+                return reset(close)
+            # add to ordering if new skill
+            category = self.setting.ability_ordering[cat_var.get()]
+            if to_var.get() not in category:
+                category.append(to_var.get())
+                # if marked as language, softcap to 5
+                if cat_var.get() == "Languages":
+                    self.setting.softcapped_stats[to_var.get()] = 5
+                    for c in self.setting.characters.values():
+                        c.softcapped_stats[to_var.get()] = 5
+            return reset(close)
+
+        reset(start=True)
+
+        app_n_close_b = ttk.Button(popup,text="Apply and Close",
+                           command=lambda:apply(close=True))
+        app_n_cont_b = ttk.Button(popup,text="Apply and Continue",
+                           command=lambda:apply())
+
+        popup.bind('<Return>', lambda e:apply(close=True))
+        type_box.bind("<<ComboboxSelected>>", populate_boxes)
+        to_var.trace_add('write', lambda v,i,m:activate_cat_box())
+
+        type_label.grid(column=0, row=0, sticky=tk.NW, padx=10, pady=10,)
+        type_box.grid(column=1, row=0, sticky=tk.NW, padx=10, pady=10,)
+        from_label.grid(column=0, row=1, sticky=tk.NW, padx=10, pady=10,)
+        from_box.grid(column=0, row=2, sticky=tk.NW, padx=10, pady=10,)
+        to_label.grid(column=1, row=1, sticky=tk.NW, padx=10, pady=10,)
+        to_box.grid(column=1, row=2, sticky=tk.NW, padx=10, pady=10,)
+        cat_label.grid(column=2, row=1, sticky=tk.NW, padx=10, pady=10,)
+        cat_box.grid(column=2, row=2, sticky=tk.NW, padx=10, pady=10,)
+        app_n_close_b.grid(column=1, row=3, padx=10, pady=10, sticky=tk.NW)
+        app_n_cont_b.grid(column=2, row=3, padx=10, pady=10, sticky=tk.NW)
+
+        # TODO apply/save button and make the update propagate to
+        # the chars stats and history and the settings ability ordering if new
 
     def save_setting(self):
         if self.setting.save_name:

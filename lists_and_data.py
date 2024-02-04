@@ -488,6 +488,7 @@ DEFAULT_ABIL_ORDERING = {"Core Magic": ORD_CORE_MAGIC,
                          "Org. Lores": ORD_ORG_LORES,
                          "Professions": ORD_PROF,
                          "Supernatural": ORD_SUPER,
+                         "Other": {},
                          }
 
 # just used to verify coherence in lists
