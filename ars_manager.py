@@ -411,6 +411,8 @@ class ArsManager:
 
     def on_double_click(self, event):
         item = self.tree.identify('item',event.x,event.y)
+        if item == "": # only do the following if double clicking a char
+            return
         name = self.tree.item(item, 'values')[0]
         char = self.setting.characters[name]
         popup = tk.Toplevel(self.root)
