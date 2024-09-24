@@ -778,6 +778,8 @@ class ArsManager:
                 # Deserialize the setting using the custom from_json method
                 serialized_setting = json.load(file)
                 self.setting = Setting.from_json(serialized_setting)
+                # override to save in same file as loaded if it was renamned
+                self.setting.save_name = file_path
                 self.update_table()
                 self.enable_setting_menus()
 
